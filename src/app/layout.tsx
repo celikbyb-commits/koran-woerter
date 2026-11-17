@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Amiri, Geist } from "next/font/google";
+import { Amiri, Nunito } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const nunito = Nunito({
+  variable: "--font-nunito",
   subsets: ["latin"],
 });
 
@@ -27,7 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="de"
-      className={`${geistSans.variable} ${amiri.variable} antialiased`}
+      className={`${nunito.variable} ${amiri.variable} antialiased`}
     >
       <body className="min-h-dvh">{children}</body>
     </html>

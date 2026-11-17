@@ -1,5 +1,5 @@
-import KoranApp from "@/components/KoranApp";
+import App from "@/components/App";
 
-export default function KoranPage() {
-  return <KoranApp />;
+export default function Home() {
+  return <App />;
 }

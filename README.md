@@ -2,15 +2,20 @@
 
 Web-App zum Lernen der wichtigsten Wörter des Korans auf Deutsch.
 
-- **Wortliste:** ca. 160 Kernwörter mit Arabisch (mit Vokalzeichen), Umschrift
-  und deutscher Bedeutung, nach Themen gefiltert und durchsuchbar (Deutsch,
-  Umschrift oder Arabisch, auch ohne Vokalzeichen).
-- **Training:** Quiz mit 4 Antwortmöglichkeiten, wahlweise Arabisch → Deutsch
-  oder Deutsch → Arabisch. Nach jedem Klick wird sofort *Richtig* / *Falsch*
-  angezeigt, am Ende gibt es eine Auswertung und „Fehler üben“.
-- **Lernfortschritt** wird nur lokal im Browser gespeichert
-  (Karteikasten-Prinzip: falsch beantwortete Wörter kommen öfter dran).
-  Kein Login, keine Datenbank.
+- **Lernpfad:** 8 Einheiten (nach Themen) mit kurzen Lektionen à ca. 6 Wörtern,
+  die nacheinander freigeschaltet werden. Neue Wörter werden zuerst vorgestellt,
+  dann abgefragt (Arabisch → Deutsch und Deutsch → Arabisch).
+- **Quiz:** Antwort antippen → „Prüfen“ → sofort *Richtig* / *Leider falsch*.
+  Falsch beantwortete Fragen kommen am Ende der Lektion noch einmal.
+- **Motivation:** XP, Tagesziel, Tage-in-Folge-Serie, Abschlussbildschirm mit
+  Genauigkeit und Zeit.
+- **Üben:** Fehler gezielt wiederholen oder freies Training nach Thema/Richtung.
+- **Wörter:** alle ca. 160 Kernwörter mit Arabisch, Umschrift und Deutsch,
+  durchsuchbar, mit Lernstand pro Wort und Aussprache (falls das Gerät eine
+  arabische Stimme hat).
+- **Statistik:** Wochenübersicht, Fortschritt pro Einheit.
+- Lernfortschritt wird nur lokal im Browser gespeichert – kein Login, keine
+  Datenbank.
 
 Die Wörter stehen in [`src/lib/words.ts`](src/lib/words.ts) und lassen sich
 dort einfach ergänzen oder korrigieren.

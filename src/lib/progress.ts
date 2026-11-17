@@ -2,40 +2,76 @@
 
 import { useSyncExternalStore } from "react";
 
-// Lernfortschritt pro Wort nach dem Karteikasten-Prinzip (Leitner):
-// richtig → ein Fach weiter, falsch → zurück in Fach 0.
-// Gespeichert nur lokal im Browser des Nutzers.
+// Gesamter Lernstand, nur lokal im Browser gespeichert:
+// - Wörter nach dem Karteikasten-Prinzip (richtig → ein Fach weiter, falsch → Fach 0)
+// - abgeschlossene Lektionen, Erfahrungspunkte (XP) und Tagesserie
 
 export const MAX_BOX = 5;
 /** Ab diesem Fach gilt ein Wort als "gelernt". */
 export const LEARNED_BOX = 3;
+export const DAILY_GOAL = 20;
 
 export type WordStat = { box: number; right: number; wrong: number };
-export type Progress = Record<string, WordStat>;
+export type LessonStat = { best: number; times: number };
 
-const STORAGE_KEY = "koran-woerter-progress-v1";
-const EMPTY: Progress = {};
+export type State = {
+  words: Record<string, WordStat>;
+  lessons: Record<string, LessonStat>;
+  xp: number;
+  daily: Record<string, number>;
+  streak: { count: number; last: string | null };
+};
 
-let cache: Progress | null = null;
+const STORAGE_KEY = "koran-woerter-state-v2";
+const LEGACY_KEY = "koran-woerter-progress-v1";
+
+const EMPTY: State = {
+  words: {},
+  lessons: {},
+  xp: 0,
+  daily: {},
+  streak: { count: 0, last: null },
+};
+
+let cache: State | null = null;
 const listeners = new Set<() => void>();
 
-function read(): Progress {
+export function dayKey(d = new Date()): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function yesterdayKey(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return dayKey(d);
+}
+
+function read(): State {
   if (cache) return cache;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    cache = raw ? (JSON.parse(raw) as Progress) : {};
+    if (raw) {
+      cache = { ...EMPTY, ...(JSON.parse(raw) as Partial<State>) };
+    } else {
+      // Fortschritt aus der ersten Version übernehmen
+      const legacy = window.localStorage.getItem(LEGACY_KEY);
+      cache = { ...EMPTY, words: legacy ? JSON.parse(legacy) : {} };
+    }
   } catch {
-    cache = {};
+    cache = EMPTY;
   }
-  return cache;
+  return cache!;
 }
 
-function write(next: Progress) {
+function write(next: State) {
   cache = next;
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   } catch {
-    // Speicher nicht verfügbar (z.B. privater Modus) – Fortschritt gilt nur für diese Sitzung.
+    // Speicher nicht verfügbar (z.B. privater Modus) – gilt dann nur für diese Sitzung.
   }
   listeners.forEach((l) => l());
 }
@@ -45,23 +81,72 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
-export function useProgress(): Progress {
+export function useProgress(): State {
   return useSyncExternalStore(subscribe, read, () => EMPTY);
 }
 
 export function recordAnswer(wordId: string, correct: boolean) {
-  const current = read();
-  const prev = current[wordId] ?? { box: 0, right: 0, wrong: 0 };
+  const s = read();
+  const prev = s.words[wordId] ?? { box: 0, right: 0, wrong: 0 };
   write({
-    ...current,
-    [wordId]: correct
-      ? { ...prev, box: Math.min(prev.box + 1, MAX_BOX), right: prev.right + 1 }
-      : { ...prev, box: 0, wrong: prev.wrong + 1 },
+    ...s,
+    words: {
+      ...s.words,
+      [wordId]: correct
+        ? { ...prev, box: Math.min(prev.box + 1, MAX_BOX), right: prev.right + 1 }
+        : { ...prev, box: 0, wrong: prev.wrong + 1 },
+    },
+  });
+}
+
+export function addXp(amount: number) {
+  if (amount <= 0) return;
+  const s = read();
+  const today = dayKey();
+  let streak = s.streak;
+  if (streak.last !== today) {
+    streak = {
+      count: streak.last === yesterdayKey() ? streak.count + 1 : 1,
+      last: today,
+    };
+  }
+  write({
+    ...s,
+    xp: s.xp + amount,
+    daily: { ...s.daily, [today]: (s.daily[today] ?? 0) + amount },
+    streak,
+  });
+}
+
+export function completeLesson(lessonId: string, accuracy: number) {
+  const s = read();
+  const prev = s.lessons[lessonId];
+  write({
+    ...s,
+    lessons: {
+      ...s.lessons,
+      [lessonId]: {
+        best: Math.max(prev?.best ?? 0, accuracy),
+        times: (prev?.times ?? 0) + 1,
+      },
+    },
   });
 }
 
 export function resetProgress() {
-  write({});
+  write(EMPTY);
+}
+
+/** Aktuelle Serie: verfällt, wenn gestern und heute nichts gelernt wurde. */
+export function currentStreak(s: State): number {
+  if (s.streak.last === dayKey() || s.streak.last === yesterdayKey()) {
+    return s.streak.count;
+  }
+  return 0;
+}
+
+export function todayXp(s: State): number {
+  return s.daily[dayKey()] ?? 0;
 }
 
 /** Gewicht für die Zufallsauswahl: unsichere Wörter kommen öfter dran. */
