@@ -1,30 +1,24 @@
 #!/usr/bin/env python3
-"""Erzeugt die Aussprache-Dateien (public/audio/<slug>.mp3) mit ElevenLabs.
+"""Erzeugt die Aussprache-Dateien (public/audio/<id>.mp3) mit ElevenLabs.
 
-Aufruf (im Projektordner):
-    ELEVENLABS_API_KEY=sk_... python3 scripts/generate-audio.py [--force] [slug ...]
+Aufruf (im Projektordner, nach scripts/build-vocab.py):
+    ELEVENLABS_API_KEY=sk_... python3 scripts/generate-audio.py [--force] [id ...]
 
-Vorhandene Dateien werden übersprungen, außer mit --force. Mit einzelnen
-Slugs (z.B. glaube-allah) werden nur diese Wörter neu erzeugt.
+Vorhandene Dateien werden übersprungen, außer mit --force oder wenn
+einzelne IDs (z.B. r6) angegeben sind.
 """
 
 import json
 import os
-import subprocess
 import sys
+import time
+import urllib.error
 import urllib.request
 
 VOICE_ID = "w9rzKr21ANQAGQcbM9W2"  # "MAVERA Qadir"
 MODEL_ID = "eleven_multilingual_v2"
-OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "public", "audio")
-
-
-def load_words():
-    out = subprocess.check_output(
-        ["node", "--experimental-strip-types", "--no-warnings", "scripts/export-words.mts"],
-        cwd=os.path.join(os.path.dirname(__file__), ".."),
-    )
-    return json.loads(out)
+ROOT = os.path.join(os.path.dirname(__file__), "..")
+OUT_DIR = os.path.join(ROOT, "public", "audio")
 
 
 def tts(text: str) -> bytes:
@@ -33,7 +27,7 @@ def tts(text: str) -> bytes:
             "text": text,
             "model_id": MODEL_ID,
             "language_code": "ar",
-            "voice_settings": {"stability": 0.6, "similarity_boost": 0.8},
+            "voice_settings": {"stability": 0.5, "similarity_boost": 0.8},
         }
     ).encode()
     req = urllib.request.Request(
@@ -44,8 +38,16 @@ def tts(text: str) -> bytes:
             "xi-api-key": os.environ.get("ELEVENLABS_API_KEY", ""),
         },
     )
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return r.read()
+    for attempt in range(5):
+        try:
+            with urllib.request.urlopen(req, timeout=90) as r:
+                return r.read()
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 500, 502, 503) and attempt < 4:
+                time.sleep(5 * (attempt + 1))
+                continue
+            raise
+    raise RuntimeError("unreachable")
 
 
 def main():
@@ -53,17 +55,22 @@ def main():
     force = "--force" in args
     only = {a for a in args if not a.startswith("--")}
     os.makedirs(OUT_DIR, exist_ok=True)
-    words = load_words()
+    words = json.load(open(os.path.join(ROOT, "src", "data", "vocab.json"), encoding="utf-8"))["words"]
+    done = 0
     for w in words:
-        if only and w["slug"] not in only:
+        if only and w["id"] not in only:
             continue
-        path = os.path.join(OUT_DIR, f"{w['slug']}.mp3")
+        path = os.path.join(OUT_DIR, f"{w['id']}.mp3")
         if os.path.exists(path) and not force and not only:
             continue
-        data = tts(w["ar"])
+        # Punkt am Ende: verhindert, dass sehr kurze Wörter abgeschnitten werden
+        data = tts(w["ar"] + ".")
         with open(path, "wb") as f:
             f.write(data)
-        print(f"{w['slug']:<28} {w['translit']:<14} {len(data):>6} B")
+        done += 1
+        if done % 50 == 0:
+            print(f"{done} erzeugt (zuletzt {w['id']} {w['translit']})", flush=True)
+    print(f"fertig: {done} neu erzeugt", flush=True)
 
 
 if __name__ == "__main__":

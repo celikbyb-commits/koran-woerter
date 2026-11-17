@@ -231,6 +231,21 @@ function IntroCard({ word }: { word: Word }) {
         <div className="mt-2 h-px w-16 bg-slate-200" />
         <p className="text-center text-2xl font-extrabold text-slate-800">{word.de}</p>
       </div>
+      <div className="flex flex-wrap justify-center gap-2 text-sm font-bold">
+        <span className="rounded-xl bg-amber-50 px-3 py-1.5 text-amber-600">
+          {word.count.toLocaleString("de-DE")}× im Koran
+        </span>
+        {word.root && (
+          <span className="rounded-xl bg-slate-100 px-3 py-1.5 text-slate-500">
+            Wurzel <Arabic className="text-base">{word.root}</Arabic>
+          </span>
+        )}
+        {word.quran && (
+          <span className="rounded-xl bg-slate-100 px-3 py-1.5 text-slate-500">
+            im Koran z. B. <Arabic className="text-lg">{word.quran}</Arabic>
+          </span>
+        )}
+      </div>
     </div>
   );
 }

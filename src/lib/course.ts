@@ -1,6 +1,6 @@
-import { CATEGORIES, WORDS, type Category, type Word } from "./words";
+import { UNIT_INFO, WORDS, type Word } from "./words";
 
-// Lernpfad: jede Wort-Kategorie ist eine Einheit, aufgeteilt in kleine Lektionen.
+// Lernpfad: Wörter nach Häufigkeit – je 60 Wörter eine Einheit, aufgeteilt in kleine Lektionen.
 
 export const LESSON_SIZE = 6;
 
@@ -33,9 +33,11 @@ export type Lesson = {
 };
 
 export type Unit = {
-  id: Category;
+  id: string;
   number: number;
   title: string;
+  /** Anteil des Korantextes, der nach dieser Einheit abgedeckt ist (in %) */
+  coverage: number;
   theme: Theme;
   words: Word[];
   lessons: Lesson[];
@@ -55,16 +57,17 @@ function chunk(words: Word[]): Word[][] {
 }
 
 let order = 0;
-export const UNITS: Unit[] = CATEGORIES.map((c, i) => {
-  const words = WORDS.filter((w) => w.category === c.id);
+export const UNITS: Unit[] = UNIT_INFO.map((info, i) => {
+  const words = WORDS.filter((w) => w.unit === info.number);
   return {
-    id: c.id,
-    number: i + 1,
-    title: c.label,
+    id: `u${info.number}`,
+    number: info.number,
+    title: `Wörter ${info.from}–${info.to}`,
+    coverage: info.coverage,
     theme: THEMES[i % THEMES.length],
     words,
     lessons: chunk(words).map((ws, j) => ({
-      id: `${c.id}-${j + 1}`,
+      id: `u${info.number}-${j + 1}`,
       order: order++,
       numberInUnit: j + 1,
       words: ws,

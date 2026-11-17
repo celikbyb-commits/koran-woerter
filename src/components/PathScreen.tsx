@@ -58,6 +58,9 @@ export default function PathScreen({
                   Einheit {unit.number} · {done}/{unit.lessons.length} Lektionen
                 </p>
                 <h2 className="mt-0.5 text-xl font-extrabold">{unit.title}</h2>
+                <p className="mt-1 text-sm font-bold opacity-90">
+                  Danach kennst du ca. {Math.round(unit.coverage)} % der Wörter im Koran
+                </p>
               </div>
               <button
                 type="button"

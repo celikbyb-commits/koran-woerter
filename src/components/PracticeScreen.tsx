@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { UNITS } from "@/lib/course";
-import { WORDS, type Category, type Word } from "@/lib/words";
+import { CATEGORIES, WORDS, type Category, type Word } from "@/lib/words";
 import type { State } from "@/lib/progress";
 import { weakWords, type Direction } from "@/lib/quiz";
 import { Button, IconBolt, IconDumbbell, IconTarget } from "./ui";
@@ -22,6 +21,32 @@ const DIRECTIONS: [Direction | "mix", string][] = [
 
 export type MatchConfig = { title: string; pool: Word[]; count: number };
 
+/** Woher die Wörter fürs Üben kommen */
+type Source = "gesehen" | "top100" | "top500" | "alle" | Category;
+
+const SOURCES: [Source, string][] = [
+  ["gesehen", "Schon gelernte"],
+  ["top100", "Top 100"],
+  ["top500", "Top 500"],
+  ["alle", `Alle (${WORDS.length})`],
+  ...CATEGORIES.map((c) => [c.id, c.label] as [Source, string]),
+];
+
+function poolFor(source: Source, progress: State): Word[] {
+  switch (source) {
+    case "gesehen":
+      return WORDS.filter((w) => progress.words[w.id]);
+    case "top100":
+      return WORDS.slice(0, 100);
+    case "top500":
+      return WORDS.slice(0, 500);
+    case "alle":
+      return WORDS;
+    default:
+      return WORDS.filter((w) => w.category === source);
+  }
+}
+
 export default function PracticeScreen({
   progress,
   onStart,
@@ -31,15 +56,15 @@ export default function PracticeScreen({
   onStart: (c: PracticeConfig) => void;
   onStartMatch: (c: MatchConfig) => void;
 }) {
-  const [category, setCategory] = useState<Category | "alle">("alle");
+  const hasSeen = Object.keys(progress.words).length >= 4;
+  const [category, setCategory] = useState<Source>(hasSeen ? "gesehen" : "top100");
   const [direction, setDirection] = useState<Direction | "mix">("ar-de");
   const [count, setCount] = useState(10);
-  const [matchCategory, setMatchCategory] = useState<Category | "alle">("alle");
+  const [matchCategory, setMatchCategory] = useState<Source>(hasSeen ? "gesehen" : "top100");
   const [matchCount, setMatchCount] = useState(20);
-  const matchPool =
-    matchCategory === "alle" ? WORDS : WORDS.filter((w) => w.category === matchCategory);
+  const matchPool = poolFor(matchCategory, progress);
   const weak = weakWords(progress);
-  const pool = category === "alle" ? WORDS : WORDS.filter((w) => w.category === category);
+  const pool = poolFor(category, progress);
 
   return (
     <div className="flex flex-col gap-6 pb-10">
@@ -64,20 +89,17 @@ export default function PracticeScreen({
           </div>
         </div>
 
-        <Group label="Thema">
+        <Group label="Wörter aus">
           <div className="flex flex-wrap gap-2">
-            <Chip active={matchCategory === "alle"} onClick={() => setMatchCategory("alle")} tone="violet">
-              Alle ({WORDS.length})
-            </Chip>
-            {UNITS.map((u) => (
-              <Chip key={u.id} active={matchCategory === u.id} onClick={() => setMatchCategory(u.id)} tone="violet">
-                {u.title}
+            {SOURCES.filter(([id]) => id !== "gesehen" || hasSeen).map(([id, label]) => (
+              <Chip key={id} active={matchCategory === id} onClick={() => setMatchCategory(id)} tone="violet">
+                {label}
               </Chip>
             ))}
           </div>
         </Group>
 
-        <Group label="Wörter">
+        <Group label="Anzahl">
           <div className="flex flex-wrap gap-2">
             {[10, 20, 40].map((n) => (
               <Chip key={n} active={matchCount === n} onClick={() => setMatchCount(n)} tone="violet">
@@ -148,14 +170,11 @@ export default function PracticeScreen({
           </div>
         </div>
 
-        <Group label="Thema">
+        <Group label="Wörter aus">
           <div className="flex flex-wrap gap-2">
-            <Chip active={category === "alle"} onClick={() => setCategory("alle")}>
-              Alle ({WORDS.length})
-            </Chip>
-            {UNITS.map((u) => (
-              <Chip key={u.id} active={category === u.id} onClick={() => setCategory(u.id)}>
-                {u.title}
+            {SOURCES.filter(([id]) => id !== "gesehen" || hasSeen).map(([id, label]) => (
+              <Chip key={id} active={category === id} onClick={() => setCategory(id)}>
+                {label}
               </Chip>
             ))}
           </div>

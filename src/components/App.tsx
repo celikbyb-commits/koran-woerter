@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Lesson, Unit } from "@/lib/course";
-import type { Category } from "@/lib/words";
+import type { WordFilter } from "./WordsScreen";
 import {
   DAILY_GOAL,
   addXp,
@@ -51,7 +51,7 @@ const TABS: { id: Tab; label: string; icon: (p: { className?: string }) => React
 export default function App() {
   const progress = useProgress();
   const [tab, setTab] = useState<Tab>("lernen");
-  const [wordsCategory, setWordsCategory] = useState<Category | "alle">("alle");
+  const [wordsCategory, setWordsCategory] = useState<WordFilter>("alle");
   const [session, setSession] = useState<Session | null>(null);
   const [match, setMatch] = useState<{ title: string; rounds: Word[][]; key: number } | null>(null);
 
@@ -141,7 +141,7 @@ export default function App() {
                   setTimeout(() => document.getElementById("profi")?.scrollIntoView({ behavior: "smooth" }), 50);
                 }}
                 onShowWords={(u) => {
-                  setWordsCategory(u.id);
+                  setWordsCategory(u.id as WordFilter);
                   setTab("woerter");
                   window.scrollTo(0, 0);
                 }}
@@ -169,7 +169,7 @@ export default function App() {
               />
             )}
             {tab === "woerter" && (
-              <WordsScreen key={wordsCategory} progress={progress} initialCategory={wordsCategory} />
+              <WordsScreen key={wordsCategory} progress={progress} initialFilter={wordsCategory} />
             )}
             {tab === "profil" && <ProfileScreen progress={progress} />}
           </main>
