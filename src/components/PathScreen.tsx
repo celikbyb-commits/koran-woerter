@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ALL_LESSONS, UNITS, type Lesson, type Unit } from "@/lib/course";
 import type { State } from "@/lib/progress";
-import { Arabic, Button, IconBook, IconCheck, IconLock, IconStar } from "./ui";
+import { Arabic, Button, IconBolt, IconBook, IconCheck, IconLock, IconStar } from "./ui";
 
 // Versatz der Lektions-Knoten für den geschwungenen Pfad (in px)
 const OFFSETS = [0, 44, 70, 44, 0, -44, -70, -44];
@@ -17,16 +17,34 @@ export default function PathScreen({
   progress,
   onStartLesson,
   onShowWords,
+  onAdvanced,
 }: {
   progress: State;
   onStartLesson: (lesson: Lesson, unit: Unit) => void;
   onShowWords: (unit: Unit) => void;
+  onAdvanced: () => void;
 }) {
   const [open, setOpen] = useState<string | null>(null);
   const current = ALL_LESSONS.find((l) => !progress.lessons[l.id]);
 
   return (
     <div className="flex flex-col gap-10 pb-10" onClick={() => setOpen(null)}>
+      <button
+        type="button"
+        onClick={onAdvanced}
+        className="-mb-4 flex items-center gap-4 rounded-2xl border-2 border-b-4 border-violet-200 bg-violet-50 px-4 py-3 text-left transition-all hover:bg-violet-100 active:translate-y-[2px] active:border-b-2"
+      >
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-500 text-white">
+          <IconBolt className="h-6 w-6" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-extrabold text-violet-700">Profi-Modus für Fortgeschrittene</span>
+          <span className="block text-sm font-semibold text-violet-500">
+            Arabisch und Deutsch nebeneinander – Paare finden
+          </span>
+        </span>
+        <span className="text-2xl font-extrabold text-violet-400" aria-hidden>›</span>
+      </button>
       {UNITS.map((unit) => {
         const done = unit.lessons.filter((l) => progress.lessons[l.id]).length;
         return (

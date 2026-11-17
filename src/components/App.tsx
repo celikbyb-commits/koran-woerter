@@ -12,7 +12,9 @@ import {
   useProgress,
   type State,
 } from "@/lib/progress";
-import { buildLessonSteps, buildPracticeSteps, type Step } from "@/lib/quiz";
+import { buildLessonSteps, buildMatchRounds, buildPracticeSteps, type Step } from "@/lib/quiz";
+import type { Word } from "@/lib/words";
+import MatchGame from "./MatchGame";
 import LessonPlayer, { type LessonResult } from "./LessonPlayer";
 import PathScreen from "./PathScreen";
 import PracticeScreen from "./PracticeScreen";
@@ -51,6 +53,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("lernen");
   const [wordsCategory, setWordsCategory] = useState<Category | "alle">("alle");
   const [session, setSession] = useState<Session | null>(null);
+  const [match, setMatch] = useState<{ title: string; rounds: Word[][]; key: number } | null>(null);
 
   function startLesson(lesson: Lesson, unit: Unit) {
     const repeat = !!progress.lessons[lesson.id];
@@ -63,6 +66,21 @@ export default function App() {
         addXp((repeat ? 5 : 10) + (r.accuracy === 100 ? 5 : 0));
       },
     });
+  }
+
+  if (match) {
+    return (
+      <MatchGame
+        key={match.key}
+        title={match.title}
+        rounds={match.rounds}
+        onFinish={(r) => addXp(r.firstTryCorrect)}
+        onExit={() => {
+          setMatch(null);
+          window.scrollTo(0, 0);
+        }}
+      />
+    );
   }
 
   if (session) {
@@ -118,6 +136,10 @@ export default function App() {
               <PathScreen
                 progress={progress}
                 onStartLesson={startLesson}
+                onAdvanced={() => {
+                  setTab("ueben");
+                  setTimeout(() => document.getElementById("profi")?.scrollIntoView({ behavior: "smooth" }), 50);
+                }}
                 onShowWords={(u) => {
                   setWordsCategory(u.id);
                   setTab("woerter");
@@ -128,6 +150,14 @@ export default function App() {
             {tab === "ueben" && (
               <PracticeScreen
                 progress={progress}
+                onStartMatch={(c) => {
+                  setMatch({
+                    title: c.title,
+                    rounds: buildMatchRounds(c.pool, c.count, progress),
+                    key: Date.now(),
+                  });
+                  window.scrollTo(0, 0);
+                }}
                 onStart={(c) =>
                   setSession({
                     title: c.title,

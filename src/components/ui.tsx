@@ -224,6 +224,14 @@ export function IconSpeakerOff({ className }: IconProps) {
   );
 }
 
+export function IconBolt({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <path fill="currentColor" d="M13.5 2 4 13.5h6.5L9.5 22 20 9.5h-6.5L13.5 2Z" />
+    </svg>
+  );
+}
+
 export function IconPath({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden>

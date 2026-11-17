@@ -102,3 +102,25 @@ export function weakWords(progress: State): Word[] {
 export function retryOf(step: Extract<Step, { kind: "choice" }>): Step {
   return { ...step, key: `q${seq++}`, options: shuffle(step.options), retry: true };
 }
+
+/**
+ * Wörter für "Paare zuordnen" in Runden aufteilen. Innerhalb einer Runde
+ * dürfen keine zwei Wörter dieselbe Bedeutung haben, sonst wäre die
+ * Zuordnung nicht eindeutig.
+ */
+export function buildMatchRounds(
+  pool: Word[],
+  count: number,
+  progress: State,
+  roundSize = 5,
+): Word[][] {
+  const words = weightedSample(pool, count, progress);
+  const rounds: Word[][] = [];
+  for (const w of words) {
+    const round = rounds.find((r) => r.length < roundSize && !r.some((x) => overlaps(x, w)));
+    if (round) round.push(w);
+    else rounds.push([w]);
+  }
+  // Einzelne Wörter am Ende lohnen keine eigene Runde
+  return rounds.filter((r) => r.length >= 2 || rounds.length === 1);
+}

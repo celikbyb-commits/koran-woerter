@@ -375,7 +375,7 @@ function BottomBar({
 
 /* ------------------------------------------------------------------ */
 
-function FinishScreen({
+export function FinishScreen({
   title,
   result,
   xp,
