@@ -33,3 +33,13 @@ App läuft danach unter `http://localhost:3000`.
 
 Repo auf [vercel.com](https://vercel.com) importieren und deployen – es werden
 keine Umgebungsvariablen benötigt.
+
+## Aussprache (ElevenLabs)
+
+Die Aussprache aller Wörter liegt als MP3 in `public/audio/` und wurde einmalig
+mit ElevenLabs (Stimme „MAVERA Qadir“) erzeugt. Neue oder geänderte Wörter:
+
+```bash
+ELEVENLABS_API_KEY=sk_... python3 scripts/generate-audio.py            # nur fehlende
+ELEVENLABS_API_KEY=sk_... python3 scripts/generate-audio.py glaube-allah  # einzelne neu
+```

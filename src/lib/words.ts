@@ -234,3 +234,15 @@ export function meaningKeys(de: string): string[] {
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
 }
+
+/** Dateiname der Aussprache-Datei in /public/audio (nur ASCII). */
+export function audioSlug(w: Pick<Word, "id">): string {
+  return w.id
+    .replace(/\u02BF/g, "3") // ʿAin (wie im arabischen Chat-Alphabet)
+    .replace(/\u02BE/g, "2") // Hamza
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .toLowerCase();
+}

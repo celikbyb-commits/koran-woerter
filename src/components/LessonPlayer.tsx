@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Word } from "@/lib/words";
-import { recordAnswer } from "@/lib/progress";
+import { recordAnswer, setSound, useProgress } from "@/lib/progress";
 import { retryOf, type Step } from "@/lib/quiz";
 import {
   Arabic,
@@ -12,8 +12,11 @@ import {
   IconGem,
   IconTarget,
   IconX,
+  IconSpeaker,
+  IconSpeakerOff,
   ProgressBar,
   SpeakButton,
+  playWord,
 } from "./ui";
 
 export type LessonResult = {
@@ -61,6 +64,14 @@ export default function LessonPlayer({
     [initialSteps],
   );
   const step = queue[pos];
+  const { sound } = useProgress();
+
+  // Arabisches Wort automatisch vorlesen, sobald es als Frage/neues Wort erscheint
+  useEffect(() => {
+    if (!sound || !step || result) return;
+    if (step.kind === "intro" || step.direction === "ar-de") playWord(step.word);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step?.key]);
 
   function finish() {
     const firstTryCorrect = firstTry;
@@ -91,6 +102,7 @@ export default function LessonPlayer({
     if (!step || step.kind !== "choice" || !selected || checked) return;
     const correct = selected === step.word.id;
     recordAnswer(step.word.id, correct);
+    if (sound && step.direction === "de-ar") playWord(step.word);
     if (correct) {
       setSolved((n) => n + 1);
       if (!step.retry) setFirstTry((n) => n + 1);
@@ -149,6 +161,15 @@ export default function LessonPlayer({
           <IconX className="h-7 w-7" />
         </button>
         <ProgressBar value={progress} className="flex-1" />
+        <button
+          type="button"
+          onClick={() => setSound(!sound)}
+          aria-label={sound ? "Ton aus" : "Ton an"}
+          title={sound ? "Automatisches Vorlesen aus" : "Automatisches Vorlesen an"}
+          className="rounded-xl p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+        >
+          {sound ? <IconSpeaker className="h-7 w-7" /> : <IconSpeakerOff className="h-7 w-7" />}
+        </button>
         {combo >= 3 && (
           <span className="animate-pop text-sm font-extrabold whitespace-nowrap text-orange-500">
             {combo}× in Folge
@@ -204,7 +225,7 @@ function IntroCard({ word }: { word: Word }) {
       <div className="flex flex-col items-center gap-4 rounded-3xl border-2 border-b-4 border-slate-200 px-6 py-10">
         <Arabic className="text-7xl leading-snug text-slate-900">{word.ar}</Arabic>
         <div className="flex items-center gap-3">
-          <SpeakButton text={word.ar} />
+          <SpeakButton word={word} />
           <span className="text-lg font-semibold text-slate-400 italic">{word.translit}</span>
         </div>
         <div className="mt-2 h-px w-16 bg-slate-200" />
@@ -235,7 +256,7 @@ function ChoiceCard({
       <div className="flex items-center justify-center gap-4 rounded-3xl bg-slate-50 px-4 py-6">
         {arToDe ? (
           <>
-            <SpeakButton text={step.word.ar} size="lg" />
+            <SpeakButton word={step.word} size="lg" />
             <Arabic className="text-6xl leading-snug text-slate-900">{step.word.ar}</Arabic>
           </>
         ) : (

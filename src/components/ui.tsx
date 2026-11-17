@@ -1,6 +1,7 @@
 "use client";
 
-import { useSyncExternalStore, type ButtonHTMLAttributes, type ReactNode } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { audioSlug, type Word } from "@/lib/words";
 
 /* ------------------------------------------------------------------ */
 /* Knöpfe im "Tasten"-Stil mit Kante unten                            */
@@ -76,59 +77,35 @@ export function Arabic({
 }
 
 /* ------------------------------------------------------------------ */
-/* Aussprache über die Sprachausgabe des Geräts                      */
+/* Aussprache (MP3-Dateien in /public/audio, erzeugt mit ElevenLabs)   */
 /* ------------------------------------------------------------------ */
 
-function arabicVoice(): SpeechSynthesisVoice | undefined {
-  return window.speechSynthesis
-    ?.getVoices()
-    .find((v) => v.lang.toLowerCase().startsWith("ar"));
-}
+let currentAudio: HTMLAudioElement | null = null;
 
-function subscribeVoices(cb: () => void) {
-  const synth = typeof window !== "undefined" ? window.speechSynthesis : undefined;
-  if (!synth) return () => {};
-  synth.addEventListener?.("voiceschanged", cb);
-  return () => synth.removeEventListener?.("voiceschanged", cb);
-}
-
-/** true, wenn das Gerät eine arabische Stimme hat. */
-export function useCanSpeak(): boolean {
-  return useSyncExternalStore(
-    subscribeVoices,
-    () => !!(window.speechSynthesis && arabicVoice()),
-    () => false,
-  );
-}
-
-export function speakArabic(text: string) {
-  const synth = window.speechSynthesis;
-  if (!synth) return;
-  synth.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "ar-SA";
-  u.rate = 0.75;
-  const voice = arabicVoice();
-  if (voice) u.voice = voice;
-  synth.speak(u);
+export function playWord(word: Pick<Word, "id">) {
+  try {
+    currentAudio?.pause();
+    currentAudio = new Audio(`/audio/${audioSlug(word)}.mp3`);
+    void currentAudio.play().catch(() => {});
+  } catch {
+    // Wiedergabe nicht möglich – ignorieren
+  }
 }
 
 export function SpeakButton({
-  text,
+  word,
   size = "md",
 }: {
-  text: string;
+  word: Pick<Word, "id">;
   size?: "sm" | "md" | "lg";
 }) {
-  const canSpeak = useCanSpeak();
-  if (!canSpeak) return null;
   const dims = { sm: "h-9 w-9", md: "h-11 w-11", lg: "h-14 w-14" }[size];
   return (
     <button
       type="button"
       onClick={(e) => {
         e.stopPropagation();
-        speakArabic(text);
+        playWord(word);
       }}
       aria-label="Aussprache anhören"
       className={`${dims} inline-flex shrink-0 items-center justify-center rounded-2xl border-b-4 border-sky-700 bg-sky-500 text-white transition-all hover:bg-sky-400 active:translate-y-[2px] active:border-b-2`}
@@ -227,6 +204,21 @@ export function IconSpeaker({ className }: IconProps) {
         strokeWidth="2.2"
         strokeLinecap="round"
         d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"
+      />
+    </svg>
+  );
+}
+
+export function IconSpeakerOff({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <path fill="currentColor" d="M4 9h4l5-4v14l-5-4H4V9Z" />
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        d="M16.5 9.5l5 5M21.5 9.5l-5 5"
       />
     </svg>
   );

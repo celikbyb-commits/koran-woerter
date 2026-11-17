@@ -20,6 +20,8 @@ export type State = {
   xp: number;
   daily: Record<string, number>;
   streak: { count: number; last: string | null };
+  /** Wörter in Lektionen automatisch vorlesen */
+  sound: boolean;
 };
 
 const STORAGE_KEY = "koran-woerter-state-v2";
@@ -31,6 +33,7 @@ const EMPTY: State = {
   xp: 0,
   daily: {},
   streak: { count: 0, last: null },
+  sound: true,
 };
 
 let cache: State | null = null;
@@ -134,7 +137,11 @@ export function completeLesson(lessonId: string, accuracy: number) {
 }
 
 export function resetProgress() {
-  write(EMPTY);
+  write({ ...EMPTY, sound: read().sound });
+}
+
+export function setSound(on: boolean) {
+  write({ ...read(), sound: on });
 }
 
 /** Aktuelle Serie: verfällt, wenn gestern und heute nichts gelernt wurde. */

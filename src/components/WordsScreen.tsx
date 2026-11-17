@@ -106,7 +106,7 @@ export default function WordsScreen({
                     <Arabic className="w-24 shrink-0 text-right text-3xl leading-relaxed text-slate-900 sm:w-32">
                       {w.ar}
                     </Arabic>
-                    <SpeakButton text={w.ar} size="sm" />
+                    <SpeakButton word={w} size="sm" />
                   </li>
                 );
               })}
