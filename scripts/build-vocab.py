@@ -55,7 +55,9 @@ def translit(ar: str) -> str:
             out.append(v)
             last_vowel = v
         elif c == DAGGER:
-            if out and out[-1] == "a":
+            if out and out[-1] == "ā":
+                pass
+            elif out and out[-1] == "a":
                 out[-1] = "ā"
             else:
                 out.append("ā")
@@ -95,7 +97,9 @@ def translit(ar: str) -> str:
                 out.append("ā")
                 last_vowel = "ā"
         elif c == "ى":
-            if out and out[-1] == "a":
+            if out and out[-1] == "ā":
+                pass
+            elif out and out[-1] == "a":
                 out[-1] = "ā"
             elif out and out[-1] == "i":
                 out[-1] = "ī"
@@ -107,6 +111,9 @@ def translit(ar: str) -> str:
         elif c == "ي" and out and out[-1] == "i" and nxt not in (FATHA, KASRA, DAMMA, SHADDA):
             out[-1] = "ī"
             last_vowel = "ī"
+        elif c == "ي" and not nxt and out and out[-1] not in ("a", "i", "u", "ā", "ī", "ū"):
+            # unvokalisiertes ي am Wortende nach Konsonant (z.B. غاوي)
+            out.append("ī")
         elif c == "و" and out and out[-1] == "u" and nxt not in (FATHA, KASRA, DAMMA, SHADDA):
             out[-1] = "ū"
             last_vowel = "ū"
@@ -120,6 +127,8 @@ def translit(ar: str) -> str:
             last_vowel = ""
         i += 1
     res = "".join(out)
+    # Klassische Schreibung مِائَة wird "miʾa" gesprochen
+    res = res.replace("miāʾa", "miʾa")
     res = re.sub(r"^al(?=[^aeiouāīū])", "al-", res)
     return res
 
