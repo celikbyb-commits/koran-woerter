@@ -37,9 +37,12 @@ export default function LessonPlayer({
   xpFor,
   onFinish,
   onExit,
+  autoAdvance = false,
 }: {
   title: string;
   steps: Step[];
+  /** Nach richtiger Antwort automatisch zum nächsten Wort springen */
+  autoAdvance?: boolean;
   /** XP, die für dieses Ergebnis gutgeschrieben werden (für den Abschlussbildschirm). */
   xpFor: (r: LessonResult) => number;
   onFinish: (r: LessonResult) => void;
@@ -90,7 +93,11 @@ export default function LessonPlayer({
     onFinish(r);
   }
 
+  // Merkt sich, für welche Frage ein automatischer Sprung geplant ist
+  const autoFor = useRef<string | null>(null);
+
   function advance() {
+    autoFor.current = null;
     setSelected(null);
     setChecked(null);
     if (pos + 1 >= queue.length) finish();
@@ -111,6 +118,13 @@ export default function LessonPlayer({
       setCombo((c) => c + 1);
       const praise = t("praise").split("|");
       setChecked({ correct, praise: praise[Math.floor(Math.random() * praise.length)] });
+      if (autoAdvance) {
+        autoFor.current = step.key;
+        const key = step.key;
+        setTimeout(() => {
+          if (autoFor.current === key) advanceRef.current();
+        }, 900);
+      }
     } else {
       setCombo(0);
       setMissed((m) => [...m, step.word]);
@@ -119,6 +133,11 @@ export default function LessonPlayer({
       setChecked({ correct, praise: "" });
     }
   }
+
+  const advanceRef = useRef(advance);
+  useEffect(() => {
+    advanceRef.current = advance;
+  });
 
   // Tastatur: 1–4 auswählen, Enter prüfen/weiter
   const handlerRef = useRef<(e: KeyboardEvent) => void>(() => {});

@@ -12,6 +12,7 @@ export type PracticeConfig = {
   pool: Word[];
   count: number;
   direction: Direction | "mix";
+  autoAdvance?: boolean;
 };
 
 const DIRECTIONS = [
@@ -153,6 +154,7 @@ export default function PracticeScreen({
               pool: weak,
               count: Math.min(weak.length, 15),
               direction: "mix",
+              autoAdvance: true,
             })
           }
           className="shrink-0 !px-4"

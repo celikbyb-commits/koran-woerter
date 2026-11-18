@@ -40,6 +40,7 @@ type Tab = "lernen" | "ueben" | "woerter" | "profil";
 
 type Session = {
   title: string;
+  autoAdvance?: boolean;
   steps: Step[];
   xpFor: (r: LessonResult) => number;
   onDone: (r: LessonResult) => void;
@@ -83,6 +84,7 @@ export default function App() {
     if (pool.length === 0) return;
     setSession({
       title: translate(progress.lang, "reviewSession"),
+      autoAdvance: true,
       steps: buildPracticeSteps(pool, Math.min(pool.length, 20), "mix", progress),
       xpFor: (r) => r.firstTryCorrect,
       onDone: (r) => addXp(r.firstTryCorrect),
@@ -111,6 +113,7 @@ export default function App() {
         title={session.title}
         steps={session.steps}
         xpFor={session.xpFor}
+        autoAdvance={session.autoAdvance}
         onFinish={session.onDone}
         onExit={() => {
           setSession(null);
@@ -196,6 +199,7 @@ export default function App() {
                 onStart={(c) =>
                   setSession({
                     title: c.title,
+                    autoAdvance: c.autoAdvance,
                     steps: buildPracticeSteps(c.pool, c.count, c.direction, progress),
                     xpFor: (r) => r.firstTryCorrect,
                     onDone: (r) => addXp(r.firstTryCorrect),
