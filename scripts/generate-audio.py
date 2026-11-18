@@ -20,14 +20,21 @@ MODEL_ID = "eleven_multilingual_v2"
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 OUT_DIR = os.path.join(ROOT, "public", "audio")
 
+# Einzelne Wörter, die mit den Standard-Einstellungen falsch klangen
+# (per Gehör ausgewählt): ID -> (Text, Modell, Stabilität)
+OVERRIDES = {
+    "r6": ("اَللّٰه.", "eleven_multilingual_v2", 0.85),  # Allāh mit a, nicht "Illāh"
+    "r74": ("أَمْر", "eleven_turbo_v2_5", 0.85),  # amr ohne -un, nicht übersteuert
+}
 
-def tts(text: str) -> bytes:
+
+def tts(text: str, model: str = MODEL_ID, stability: float = 0.85) -> bytes:
     body = json.dumps(
         {
             "text": text,
-            "model_id": MODEL_ID,
+            "model_id": model,
             "language_code": "ar",
-            "voice_settings": {"stability": 0.5, "similarity_boost": 0.8},
+            "voice_settings": {"stability": stability, "similarity_boost": 0.75, "style": 0.0},
         }
     ).encode()
     req = urllib.request.Request(
@@ -64,13 +71,17 @@ def main():
         if os.path.exists(path) and not force and not only:
             continue
         # Punkt am Ende: verhindert, dass sehr kurze Wörter abgeschnitten werden
-        data = tts(w["ar"] + ".")
+        if w["id"] in OVERRIDES:
+            text, model, stab = OVERRIDES[w["id"]]
+            data = tts(text, model, stab)
+        else:
+            data = tts(w["ar"] + ".")
         with open(path, "wb") as f:
             f.write(data)
         done += 1
         if done % 50 == 0:
             print(f"{done} erzeugt (zuletzt {w['id']} {w['translit']})", flush=True)
-    print(f"fertig: {done} neu erzeugt", flush=True)
+    print(f"fertig: {done} neu erzeugt – danach: bash scripts/normalize-audio.sh", flush=True)
 
 
 if __name__ == "__main__":
