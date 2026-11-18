@@ -139,6 +139,8 @@ const de = {
   offlineAudio: "Alle Töne für offline laden",
   offlineAudioDone: "Alle Töne sind offline verfügbar ✓",
   offlineAudioLoading: "Lade Töne … {n}%",
+  translitTitle: "Umschrift anzeigen",
+  translitHint: "Unter jedem arabischen Wort steht, wie man es liest (z. B. raḥma). Für Fortgeschrittene ausschaltbar.",
   backupTitle: "Fortschritt sichern",
   backupHint:
     "Ohne Konto: Sichere deinen Fortschritt als Datei oder Code und lies ihn auf einem anderen Gerät wieder ein. Beim Einlesen wird zusammengeführt – es geht nichts verloren.",
@@ -280,6 +282,8 @@ const tr: Record<Key, string> = {
   offlineAudio: "Tüm sesleri çevrimdışı için indir",
   offlineAudioDone: "Tüm sesler çevrimdışı kullanılabilir ✓",
   offlineAudioLoading: "Sesler indiriliyor … %{n}",
+  translitTitle: "Okunuşu göster",
+  translitHint: "Her Arapça kelimenin altında nasıl okunduğu yazar (örn. raḥma). İleri seviye için kapatılabilir.",
   backupTitle: "İlerlemeyi yedekle",
   backupHint:
     "Hesap gerekmez: İlerlemeni dosya veya kod olarak yedekle ve başka bir cihazda geri yükle. Yükleme sırasında birleştirilir – hiçbir şey kaybolmaz.",

@@ -8,6 +8,7 @@ import {
   currentStreak,
   dayKey,
   resetProgress,
+  setShowTranslit,
   todayXp,
   type State,
 } from "@/lib/progress";
@@ -83,6 +84,25 @@ export default function ProfileScreen({ progress }: { progress: State }) {
             </div>
           );
         })}
+      </section>
+
+      <section className="flex items-center gap-4 rounded-2xl border-2 border-slate-200 p-4">
+        <div className="min-w-0 flex-1">
+          <h2 className="font-extrabold text-slate-800">{t("translitTitle")}</h2>
+          <p className="text-sm font-semibold text-slate-500">{t("translitHint")}</p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={progress.showTranslit}
+          aria-label={t("translitTitle")}
+          onClick={() => setShowTranslit(!progress.showTranslit)}
+          className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${progress.showTranslit ? "bg-emerald-500" : "bg-slate-300"}`}
+        >
+          <span
+            className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-all ${progress.showTranslit ? "left-7" : "left-1"}`}
+          />
+        </button>
       </section>
 
       <BackupCard />

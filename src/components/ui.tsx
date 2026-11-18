@@ -3,6 +3,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { audioSlug, type Word } from "@/lib/words";
 import { useI18n } from "@/lib/i18n";
+import { useProgress } from "@/lib/progress";
 
 /* ------------------------------------------------------------------ */
 /* Knöpfe im "Tasten"-Stil mit Kante unten                            */
@@ -73,6 +74,31 @@ export function Arabic({
   return (
     <span lang="ar" dir="rtl" className={`font-arabic ${className}`}>
       {children}
+    </span>
+  );
+}
+
+/** Arabisches Wort mit Umschrift darunter (sofern eingeschaltet). */
+export function ArabicWord({
+  word,
+  className = "",
+  translitClassName = "",
+  align = "center",
+}: {
+  word: Pick<Word, "ar" | "translit">;
+  className?: string;
+  translitClassName?: string;
+  align?: "center" | "end";
+}) {
+  const { showTranslit } = useProgress();
+  return (
+    <span className={`inline-flex flex-col ${align === "end" ? "items-end" : "items-center"}`}>
+      <Arabic className={className}>{word.ar}</Arabic>
+      {showTranslit && (
+        <span className={`text-sm font-semibold italic opacity-70 ${translitClassName}`} lang="ar-Latn">
+          {word.translit}
+        </span>
+      )}
     </span>
   );
 }

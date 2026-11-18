@@ -8,6 +8,7 @@ import { useI18n } from "@/lib/i18n";
 import VerseExample from "./VerseExample";
 import {
   Arabic,
+  ArabicWord,
   Button,
   IconCheck,
   IconClock,
@@ -272,7 +273,7 @@ function ChoiceCard({
         {arToDe ? (
           <>
             <SpeakButton word={step.word} size="lg" />
-            <Arabic className="text-6xl leading-snug text-slate-900">{step.word.ar}</Arabic>
+            <ArabicWord word={step.word} className="text-6xl leading-snug text-slate-900" translitClassName="!text-lg text-slate-500" />
           </>
         ) : (
           <p className="text-center text-3xl font-extrabold text-slate-800">{m(step.word)}</p>
@@ -306,7 +307,9 @@ function ChoiceCard({
               {arToDe ? (
                 <span className="flex-1 text-lg font-bold">{m(o)}</span>
               ) : (
-                <Arabic className="flex-1 text-right text-4xl leading-relaxed">{o.ar}</Arabic>
+                <span className="flex flex-1 justify-end">
+                  <ArabicWord word={o} align="end" className="text-4xl leading-relaxed" />
+                </span>
               )}
             </button>
           );
@@ -356,7 +359,9 @@ function BottomBar({
                   {direction === "ar-de" ? (
                     <strong>{m(solution)}</strong>
                   ) : (
-                    <Arabic className="text-2xl font-bold">{solution.ar}</Arabic>
+                    <>
+                      <Arabic className="text-2xl font-bold">{solution.ar}</Arabic> <em>({solution.translit})</em>
+                    </>
                   )}
                 </p>
               ) : null}
@@ -446,7 +451,7 @@ export function FinishScreen({
               {result.mistakes.map((w) => (
                 <li key={w.id} className="flex items-center justify-between gap-3">
                   <span className="font-bold text-slate-700">{m(w)}</span>
-                  <Arabic className="text-2xl text-slate-800">{w.ar}</Arabic>
+                  <ArabicWord word={w} align="end" className="text-2xl text-slate-800" translitClassName="!text-xs" />
                 </li>
               ))}
             </ul>

@@ -35,6 +35,8 @@ export type State = {
   sound: boolean;
   /** Sprache der Bedeutungen und der Oberfläche */
   lang: Lang;
+  /** Umschrift (lateinische Buchstaben) unter arabischen Wörtern anzeigen */
+  showTranslit: boolean;
 };
 
 const STORAGE_KEY = "koran-woerter-state-v2";
@@ -48,6 +50,7 @@ const EMPTY: State = {
   streak: { count: 0, last: null },
   sound: true,
   lang: "de",
+  showTranslit: true,
 };
 
 let cache: State | null = null;
@@ -133,6 +136,10 @@ export function dueWordIds(s: State): string[] {
     .map(([id]) => id);
 }
 
+export function setShowTranslit(on: boolean) {
+  write({ ...read(), showTranslit: on });
+}
+
 export function setLang(lang: Lang) {
   write({ ...read(), lang });
 }
@@ -172,7 +179,7 @@ export function completeLesson(lessonId: string, accuracy: number) {
 }
 
 export function resetProgress() {
-  write({ ...EMPTY, sound: read().sound, lang: read().lang });
+  write({ ...EMPTY, sound: read().sound, lang: read().lang, showTranslit: read().showTranslit });
 }
 
 export function setSound(on: boolean) {

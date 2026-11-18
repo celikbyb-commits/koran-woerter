@@ -41,11 +41,12 @@ export const CORPUS = vocab.meta;
 
 /** Einzelne Bedeutungs-Stichwörter, um zu ähnliche Antwortoptionen zu vermeiden. */
 export function meaningKeys(de: string): string[] {
-  return de
-    .replace(/\(.*?\)/g, "")
-    .split(/[,;]/)
+  const inParens = [...de.matchAll(/\((.*?)\)/g)].map((m) => m[1]);
+  return [de.replace(/\(.*?\)/g, ""), ...inParens]
+    .flatMap((part) => part.split(/[,;]/))
     .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
+    // allgemeine Zusätze wie "(fem.)" oder "(Präfix)" sollen ähnliche Wörter nicht ausschließen
+    .filter((s) => s && !["fem.", "dişil", "präfix", "ön ek"].includes(s));
 }
 
 /** Dateiname der Aussprache-Datei in /public/audio. */

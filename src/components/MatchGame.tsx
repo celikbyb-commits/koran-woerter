@@ -7,7 +7,7 @@ import { shuffle } from "@/lib/quiz";
 import { useI18n } from "@/lib/i18n";
 import { FinishScreen, type LessonResult } from "./LessonPlayer";
 import {
-  Arabic,
+  ArabicWord,
   IconClock,
   IconSpeaker,
   IconSpeakerOff,
@@ -212,7 +212,7 @@ export default function MatchGame({
                     className={`flex min-h-[68px] items-center justify-center rounded-2xl border-2 border-b-4 px-2 py-2 text-center transition-all active:translate-y-[2px] active:border-b-2 disabled:cursor-default disabled:active:translate-y-0 disabled:active:border-b-4 ${look}`}
                   >
                     {side === "ar" ? (
-                      <Arabic className="text-3xl leading-relaxed">{w.ar}</Arabic>
+                      <ArabicWord word={w} className="text-3xl leading-relaxed" translitClassName="!text-xs" />
                     ) : (
                       <span className="text-[15px] leading-tight font-bold">{m(w)}</span>
                     )}

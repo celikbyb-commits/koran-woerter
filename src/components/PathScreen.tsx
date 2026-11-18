@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ALL_LESSONS, UNITS, type Lesson, type Unit } from "@/lib/course";
 import { dueWordIds, type State } from "@/lib/progress";
 import { useI18n } from "@/lib/i18n";
-import { Arabic, Button, IconBolt, IconBook, IconCheck, IconClock, IconLock, IconStar } from "./ui";
+import { Arabic, ArabicWord, Button, IconBolt, IconBook, IconCheck, IconClock, IconLock, IconStar } from "./ui";
 
 // Versatz der Lektions-Knoten für den geschwungenen Pfad (in px)
 const OFFSETS = [0, 44, 70, 44, 0, -44, -70, -44];
@@ -149,6 +149,7 @@ export default function PathScreen({
 
       <div className="flex flex-col items-center gap-2 py-6 text-center">
         <Arabic className="text-4xl text-emerald-600">وَقُل رَّبِّ زِدْنِي عِلْمًا</Arabic>
+        <p className="text-sm font-semibold text-emerald-600 italic">wa qul rabbi zidnī ʿilmā</p>
         <p className="text-sm font-semibold text-slate-400">{t("verseFooter")}</p>
       </div>
     </div>
@@ -247,9 +248,7 @@ function LessonPopover({
         <>
           <div className="my-3 flex flex-wrap justify-end gap-x-3 gap-y-1">
             {lesson.words.map((w) => (
-              <Arabic key={w.id} className="text-2xl">
-                {w.ar}
-              </Arabic>
+              <ArabicWord key={w.id} word={w} className="text-2xl" translitClassName="!text-xs !opacity-90" />
             ))}
           </div>
           <button
