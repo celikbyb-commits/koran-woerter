@@ -5,6 +5,8 @@ import { UNITS } from "@/lib/course";
 import { CATEGORIES, CORPUS, WORDS, type Category } from "@/lib/words";
 import { LEARNED_BOX, MAX_BOX, type State } from "@/lib/progress";
 import { Arabic, IconX, SpeakButton } from "./ui";
+import { CATEGORY_KEY, useI18n } from "@/lib/i18n";
+import VerseExample from "./VerseExample";
 
 /** "alle", eine Wortart oder eine Einheit (z.B. "u3") */
 export type WordFilter = "alle" | Category | `u${number}`;
@@ -37,6 +39,8 @@ export default function WordsScreen({
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<WordFilter>(initialFilter);
   const [limit, setLimit] = useState(PAGE);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const { t, m, num } = useI18n();
 
   const filtered = useMemo(() => {
     const qLatin = normalizeLatin(query.trim());
@@ -47,6 +51,7 @@ export default function WordsScreen({
       if (!qLatin && !qArabic) return true;
       return (
         normalizeLatin(w.de).includes(qLatin) ||
+        normalizeLatin(w.tr).includes(qLatin) ||
         normalizeLatin(w.translit).includes(qLatin) ||
         (qArabic !== "" &&
           (normalizeArabic(w.ar).includes(qArabic) || normalizeArabic(w.root).replace(/ /g, "") === qArabic))
@@ -54,15 +59,16 @@ export default function WordsScreen({
     });
   }, [query, filter]);
 
+
   const unitFilter = filter.startsWith("u") ? UNITS.find((u) => u.id === filter) : undefined;
   const learned = WORDS.filter((w) => (progress.words[w.id]?.box ?? 0) >= LEARNED_BOX).length;
 
   return (
     <div className="flex flex-col gap-5 pb-10">
       <div className="flex items-baseline justify-between gap-3">
-        <h1 className="text-2xl font-extrabold text-slate-800">Wörter</h1>
+        <h1 className="text-2xl font-extrabold text-slate-800">{t("tabWords")}</h1>
         <span className="text-sm font-bold text-slate-400">
-          {learned}/{WORDS.length} gelernt
+          {t("learnedOf", { n: learned, total: WORDS.length })}
         </span>
       </div>
 
@@ -73,7 +79,7 @@ export default function WordsScreen({
           setQuery(e.target.value);
           setLimit(PAGE);
         }}
-        placeholder="Suchen – Deutsch, Umschrift, Arabisch oder Wurzel"
+        placeholder={t("searchPlaceholder")}
         className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3 font-semibold text-slate-700 outline-none placeholder:text-slate-400 focus:border-sky-400 focus:bg-white"
       />
 
@@ -84,11 +90,11 @@ export default function WordsScreen({
             onClick={() => setFilter("alle")}
             className="flex shrink-0 items-center gap-1.5 rounded-xl border-2 border-b-4 border-sky-400 bg-sky-50 px-3 py-1.5 text-sm font-bold whitespace-nowrap text-sky-600"
           >
-            Einheit {unitFilter.number}
+            {t("unitN", { n: unitFilter.number })}
             <IconX className="h-4 w-4" />
           </button>
         )}
-        {[{ id: "alle" as const, label: "Alle" }, ...CATEGORIES].map((c) => (
+        {[{ id: "alle" as const, label: t("all") }, ...CATEGORIES.map((c) => ({ id: c.id, label: t(CATEGORY_KEY[c.id]) }))].map((c) => (
           <button
             key={c.id}
             type="button"
@@ -108,22 +114,32 @@ export default function WordsScreen({
       </div>
 
       <p className="px-1 text-sm font-semibold text-slate-400">
-        {filtered.length} Wörter · sortiert nach Häufigkeit im Koran
+        {t("wordsSorted", { n: filtered.length })}
       </p>
 
       <ul className="overflow-hidden rounded-2xl border-2 border-slate-200">
         {filtered.slice(0, limit).map((w, i) => {
           const box = progress.words[w.id]?.box ?? 0;
           return (
-            <li
-              key={w.id}
-              className={`flex items-center gap-3 bg-white px-3 py-3 sm:px-4 ${i > 0 ? "border-t-2 border-slate-100" : ""}`}
+            <li key={w.id} className={`bg-white ${i > 0 ? "border-t-2 border-slate-100" : ""}`}>
+            <div
+              role="button"
+              tabIndex={0}
+              aria-expanded={openId === w.id}
+              onClick={() => setOpenId(openId === w.id ? null : w.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setOpenId(openId === w.id ? null : w.id);
+                }
+              }}
+              className="flex cursor-pointer items-center gap-3 px-3 py-3 hover:bg-slate-50 sm:px-4"
             >
               <span className="w-9 shrink-0 text-center text-xs font-extrabold text-slate-300 tabular-nums">
                 {w.rank}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="font-bold text-slate-800">{w.de}</p>
+                <p className="font-bold text-slate-800">{m(w)}</p>
                 <p className="text-sm font-semibold text-slate-400">
                   <span className="italic">{w.translit}</span>
                   <span className="text-slate-300"> · </span>
@@ -131,7 +147,7 @@ export default function WordsScreen({
                   {w.root && (
                     <>
                       <span className="text-slate-300"> · </span>
-                      Wurzel <Arabic className="text-base">{w.root}</Arabic>
+                      {t("root")} <Arabic className="text-base">{w.root}</Arabic>
                     </>
                   )}
                 </p>
@@ -141,6 +157,12 @@ export default function WordsScreen({
                 <Arabic className="text-3xl leading-relaxed text-slate-900">{w.ar}</Arabic>
               </div>
               <SpeakButton word={w} size="sm" />
+            </div>
+            {openId === w.id && (
+              <div className="px-3 pb-3 sm:px-4">
+                <VerseExample word={w} />
+              </div>
+            )}
             </li>
           );
         })}
@@ -152,19 +174,16 @@ export default function WordsScreen({
           onClick={() => setLimit(limit + PAGE * 2)}
           className="self-center rounded-xl border-2 border-b-4 border-slate-200 px-5 py-2 text-sm font-extrabold tracking-wide text-sky-500 uppercase hover:bg-slate-50"
         >
-          Weitere anzeigen ({filtered.length - limit})
+          {t("moreN", { n: filtered.length - limit })}
         </button>
       )}
 
       {filtered.length === 0 && (
-        <p className="py-10 text-center font-semibold text-slate-400">Kein Wort gefunden.</p>
+        <p className="py-10 text-center font-semibold text-slate-400">{t("noneFound")}</p>
       )}
 
       <p className="px-1 text-xs font-semibold text-slate-400">
-        Auswahl und Häufigkeiten: alle Grundformen, die mindestens {CORPUS.mindesthaeufigkeit}-mal im
-        Koran vorkommen ({CORPUS.woerter_gesamt.toLocaleString("de-DE")} Wörter gesamt). Quelle:
-        Quranic Arabic Corpus (corpus.quran.com). Die deutschen Bedeutungen sind eine
-        Lernhilfe und keine Koranübersetzung.
+        {t("sourceNote", { min: CORPUS.mindesthaeufigkeit, total: num(CORPUS.woerter_gesamt) })}
       </p>
     </div>
   );
@@ -172,11 +191,12 @@ export default function WordsScreen({
 
 /** Lernstand als kleine Balken (wie Signalstärke). */
 function Strength({ box }: { box: number }) {
+  const { t } = useI18n();
   return (
     <div
       className="hidden h-5 shrink-0 items-end gap-[3px] sm:flex"
-      title={`Lernstand ${box} von ${MAX_BOX}`}
-      aria-label={`Lernstand ${box} von ${MAX_BOX}`}
+      title={t("strength", { n: box, max: MAX_BOX })}
+      aria-label={t("strength", { n: box, max: MAX_BOX })}
     >
       {[1, 2, 3, 4, 5].map((n) => (
         <span

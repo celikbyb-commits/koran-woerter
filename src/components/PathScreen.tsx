@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { ALL_LESSONS, UNITS, type Lesson, type Unit } from "@/lib/course";
-import type { State } from "@/lib/progress";
-import { Arabic, Button, IconBolt, IconBook, IconCheck, IconLock, IconStar } from "./ui";
+import { dueWordIds, type State } from "@/lib/progress";
+import { useI18n } from "@/lib/i18n";
+import { Arabic, Button, IconBolt, IconBook, IconCheck, IconClock, IconLock, IconStar } from "./ui";
 
 // Versatz der Lektions-Knoten für den geschwungenen Pfad (in px)
 const OFFSETS = [0, 44, 70, 44, 0, -44, -70, -44];
@@ -18,17 +19,37 @@ export default function PathScreen({
   onStartLesson,
   onShowWords,
   onAdvanced,
+  onReview,
 }: {
   progress: State;
   onStartLesson: (lesson: Lesson, unit: Unit) => void;
+  onReview: () => void;
   onShowWords: (unit: Unit) => void;
   onAdvanced: () => void;
 }) {
   const [open, setOpen] = useState<string | null>(null);
   const current = ALL_LESSONS.find((l) => !progress.lessons[l.id]);
+  const { t } = useI18n();
+  const due = dueWordIds(progress).length;
 
   return (
     <div className="flex flex-col gap-10 pb-10" onClick={() => setOpen(null)}>
+      {due > 0 && (
+        <button
+          type="button"
+          onClick={onReview}
+          className="-mb-6 flex items-center gap-4 rounded-2xl border-2 border-b-4 border-amber-300 bg-amber-50 px-4 py-3 text-left transition-all hover:bg-amber-100 active:translate-y-[2px] active:border-b-2"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-white">
+            <IconClock className="h-6 w-6" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-extrabold text-amber-700">{t("reviewTitle")}</span>
+            <span className="block text-sm font-semibold text-amber-600">{t("reviewSub", { n: due })}</span>
+          </span>
+          <span className="text-2xl font-extrabold text-amber-400" aria-hidden>›</span>
+        </button>
+      )}
       <button
         type="button"
         onClick={onAdvanced}
@@ -38,10 +59,8 @@ export default function PathScreen({
           <IconBolt className="h-6 w-6" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block font-extrabold text-violet-700">Profi-Modus für Fortgeschrittene</span>
-          <span className="block text-sm font-semibold text-violet-500">
-            Arabisch und Deutsch nebeneinander – Paare finden
-          </span>
+          <span className="block font-extrabold text-violet-700">{t("advancedTitle")}</span>
+          <span className="block text-sm font-semibold text-violet-500">{t("advancedSub")}</span>
         </span>
         <span className="text-2xl font-extrabold text-violet-400" aria-hidden>›</span>
       </button>
@@ -55,11 +74,13 @@ export default function PathScreen({
             >
               <div className="min-w-0">
                 <p className="text-sm font-extrabold tracking-wide uppercase opacity-80">
-                  Einheit {unit.number} · {done}/{unit.lessons.length} Lektionen
+                  {t("unitHeader", { n: unit.number, done, total: unit.lessons.length })}
                 </p>
-                <h2 className="mt-0.5 text-xl font-extrabold">{unit.title}</h2>
+                <h2 className="mt-0.5 text-xl font-extrabold">
+                  {t("unitTitle", { from: unit.from, to: unit.to })}
+                </h2>
                 <p className="mt-1 text-sm font-bold opacity-90">
-                  Danach kennst du ca. {Math.round(unit.coverage)} % der Wörter im Koran
+                  {t("unitCoverage", { p: Math.round(unit.coverage) })}
                 </p>
               </div>
               <button
@@ -71,7 +92,7 @@ export default function PathScreen({
                 className="flex shrink-0 items-center gap-2 rounded-xl border-2 border-white/40 px-3 py-2 text-sm font-extrabold uppercase transition-colors hover:bg-white/15"
               >
                 <IconBook className="h-5 w-5" />
-                <span className="hidden sm:inline">Wörter</span>
+                <span className="hidden sm:inline">{t("words")}</span>
               </button>
             </div>
 
@@ -90,7 +111,7 @@ export default function PathScreen({
                   >
                     {isCurrent && open !== lesson.id && (
                       <div className="animate-bounce-soft absolute -top-12 z-10 rounded-xl border-2 border-slate-200 bg-white px-3 py-1.5 text-sm font-extrabold tracking-wide whitespace-nowrap uppercase shadow-sm">
-                        <span className={unit.theme.text}>Start</span>
+                        <span className={unit.theme.text}>{t("start")}</span>
                         <span className="absolute -bottom-[7px] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-r-2 border-b-2 border-slate-200 bg-white" />
                       </div>
                     )}
@@ -105,7 +126,7 @@ export default function PathScreen({
                         e.stopPropagation();
                         setOpen(open === lesson.id ? null : lesson.id);
                       }}
-                      label={`Lektion ${lesson.numberInUnit}`}
+                      label={t("lessonN", { n: lesson.numberInUnit })}
                     />
 
                     {open === lesson.id && (
@@ -128,9 +149,7 @@ export default function PathScreen({
 
       <div className="flex flex-col items-center gap-2 py-6 text-center">
         <Arabic className="text-4xl text-emerald-600">وَقُل رَّبِّ زِدْنِي عِلْمًا</Arabic>
-        <p className="text-sm font-semibold text-slate-400">
-          „Und sag: Mein Herr, mehre mich an Wissen.“ (Ṭā-Hā 20:114)
-        </p>
+        <p className="text-sm font-semibold text-slate-400">{t("verseFooter")}</p>
       </div>
     </div>
   );
@@ -153,6 +172,7 @@ function LessonNode({
   label: string;
   onClick: (e: React.MouseEvent) => void;
 }) {
+  const { t } = useI18n();
   const color = !unlocked
     ? "bg-slate-200 border-slate-300 text-slate-400"
     : perfect
@@ -167,7 +187,7 @@ function LessonNode({
       <button
         type="button"
         onClick={onClick}
-        aria-label={`${label}${done ? " (abgeschlossen)" : unlocked ? "" : " (gesperrt)"}`}
+        aria-label={`${label}${done ? t("doneSuffix") : unlocked ? "" : t("lockedSuffix")}`}
         className={`relative flex h-[70px] w-[76px] items-center justify-center rounded-[50%] border-b-[7px] transition-transform active:translate-y-[4px] active:border-b-[3px] ${color}`}
       >
         {!unlocked ? (
@@ -198,6 +218,7 @@ function LessonPopover({
   offset: number;
   onStart: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <div
       onClick={(e) => e.stopPropagation()}
@@ -213,14 +234,14 @@ function LessonPopover({
         }`}
       />
       <p className={`text-lg font-extrabold ${unlocked ? "" : "text-slate-600"}`}>
-        Lektion {lesson.numberInUnit}
+        {t("lessonN", { n: lesson.numberInUnit })}
       </p>
       <p className="text-sm font-semibold opacity-90">
         {unlocked
           ? best !== undefined
-            ? `Bestes Ergebnis: ${best}% · ${lesson.words.length} Wörter`
-            : `${lesson.words.length} neue Wörter`
-          : "Schließe zuerst die vorherigen Lektionen ab."}
+            ? t("bestResult", { p: best, n: lesson.words.length })
+            : t("newWordsN", { n: lesson.words.length })
+          : t("lockedHint")}
       </p>
       {unlocked && (
         <>
@@ -236,13 +257,13 @@ function LessonPopover({
             onClick={onStart}
             className={`w-full rounded-xl border-b-4 border-slate-200 bg-white py-3 text-[15px] font-extrabold tracking-wide uppercase transition-all active:translate-y-[2px] active:border-b-2 ${unit.theme.text}`}
           >
-            {best !== undefined ? "Wiederholen (+5 XP)" : "Los geht's (+10 XP)"}
+            {best !== undefined ? t("repeatXp") : t("goXp")}
           </button>
         </>
       )}
       {!unlocked && (
         <Button variant="secondary" disabled className="mt-3 w-full">
-          Gesperrt
+          {t("locked")}
         </Button>
       )}
     </div>

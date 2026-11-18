@@ -1,6 +1,6 @@
-# Koran-Wörter
+# Koran-Wörter (اقْرَأْ)
 
-Web-App zum Lernen der wichtigsten Wörter des Korans auf Deutsch.
+Web-App zum Lernen der Wörter des Korans – auf **Deutsch und Türkisch** (umschaltbar DE/TR).
 
 - **Lernpfad:** 24 Einheiten (nach Häufigkeit) mit kurzen Lektionen à ca. 6 Wörtern,
   die nacheinander freigeschaltet werden. Neue Wörter werden zuerst vorgestellt,
@@ -13,6 +13,12 @@ Web-App zum Lernen der wichtigsten Wörter des Korans auf Deutsch.
 - **Wörter:** alle 1.434 Wörter mit Arabisch, Umschrift, Deutsch, Häufigkeit
   und Wurzel; durchsuchbar (auch nach Wurzel), mit Lernstand und Aussprache.
 - **Statistik:** Wochenübersicht, Fortschritt pro Einheit.
+- **Wiederholung im richtigen Moment:** jedes Wort hat einen Fälligkeitstermin
+  (1, 3, 7, 14, 30 Tage); fällige Wörter erscheinen oben auf der Lernen-Seite.
+- **Beispielverse:** zu jedem Wort ein kurzer Koranvers (arabisch), in dem es
+  markiert ist, mit Link zur Übersetzung auf quran.com.
+- **Installierbar & offline:** Web-App-Manifest und Service Worker; in der
+  Statistik lassen sich alle Tondateien für die Offline-Nutzung laden.
 - Lernfortschritt wird nur lokal im Browser gespeichert – kein Login, keine
   Datenbank.
 
@@ -28,6 +34,9 @@ von quran.com erstellt und sind **noch von einer fachkundigen Person zu prüfen*
 
 - `data/korpus-grundformen.json` – Grundformen mit Häufigkeit (aus dem Korpus)
 - `data/uebersetzungen.tsv` – Rang, arabische Anzeigeform (optional), Deutsch
+- `data/uebersetzungen_tr.tsv` – Rang, Türkisch (erstellt mithilfe der türkischen
+  Wort-für-Wort-Übersetzung von quran.com)
+- `public/data/beispielverse.json` – je Wort ein kurzer Vers (Text: quran.com, Uthmani)
 - `python3 scripts/build-vocab.py` erzeugt daraus `src/data/vocab.json`
   (inkl. automatischer Umschrift und Einteilung in Einheiten à 60 Wörter)
 

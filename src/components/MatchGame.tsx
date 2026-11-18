@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Word } from "@/lib/words";
 import { recordAnswer, setSound, useProgress } from "@/lib/progress";
 import { shuffle } from "@/lib/quiz";
+import { useI18n } from "@/lib/i18n";
 import { FinishScreen, type LessonResult } from "./LessonPlayer";
 import {
   Arabic,
@@ -34,6 +35,7 @@ export default function MatchGame({
   onExit: () => void;
 }) {
   const { sound } = useProgress();
+  const { t, m } = useI18n();
   const total = useMemo(() => rounds.reduce((n, r) => n + r.length, 0), [rounds]);
 
   const [roundIdx, setRoundIdx] = useState(0);
@@ -142,9 +144,9 @@ export default function MatchGame({
         <button
           type="button"
           onClick={() => {
-            if (found === 0 || window.confirm("Training wirklich beenden?")) onExit();
+            if (found === 0 || window.confirm(t("exitTrainingConfirm"))) onExit();
           }}
-          aria-label="Training beenden"
+          aria-label={t("exitTraining")}
           className="rounded-xl p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
         >
           <IconX className="h-7 w-7" />
@@ -153,7 +155,7 @@ export default function MatchGame({
         <button
           type="button"
           onClick={() => setSound(!sound)}
-          aria-label={sound ? "Ton aus" : "Ton an"}
+          aria-label={sound ? t("soundOff") : t("soundOn")}
           className="rounded-xl p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
         >
           {sound ? <IconSpeaker className="h-7 w-7" /> : <IconSpeakerOff className="h-7 w-7" />}
@@ -164,9 +166,9 @@ export default function MatchGame({
         <div className="flex items-end justify-between gap-4">
           <div>
             <span className="rounded-lg bg-violet-100 px-2.5 py-1 text-xs font-extrabold tracking-wide text-violet-600 uppercase">
-              Profi-Modus
+              {t("proMode")}
             </span>
-            <h2 className="mt-3 text-2xl font-extrabold text-slate-800">Finde die Paare</h2>
+            <h2 className="mt-3 text-2xl font-extrabold text-slate-800">{t("findPairs")}</h2>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-1 text-sm font-extrabold tabular-nums">
             <span className="flex items-center gap-1 text-sky-500">
@@ -174,7 +176,7 @@ export default function MatchGame({
               {Math.floor(secs / 60)}:{String(secs % 60).padStart(2, "0")}
             </span>
             <span className="text-slate-400">
-              {found}/{total} · {missed.size} Fehler
+              {found}/{total} · {t("mistakesN", { n: missed.size })}
             </span>
           </div>
         </div>
@@ -206,7 +208,7 @@ export default function MatchGame({
                     {side === "ar" ? (
                       <Arabic className="text-3xl leading-relaxed">{w.ar}</Arabic>
                     ) : (
-                      <span className="text-[15px] leading-tight font-bold">{w.de}</span>
+                      <span className="text-[15px] leading-tight font-bold">{m(w)}</span>
                     )}
                   </button>
                 );
@@ -216,7 +218,7 @@ export default function MatchGame({
         </div>
 
         <p className="text-center text-sm font-semibold text-slate-400">
-          Runde {roundIdx + 1} von {rounds.length}
+          {t("roundOf", { n: roundIdx + 1, total: rounds.length })}
         </p>
       </div>
     </div>

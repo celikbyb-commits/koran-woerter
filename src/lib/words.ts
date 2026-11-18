@@ -23,6 +23,8 @@ export type Word = {
   quran: string;
   translit: string;
   de: string;
+  /** Türkische Bedeutung */
+  tr: string;
   /** Wurzelbuchstaben, z.B. "ر ح م" */
   root: string;
   /** Vorkommen im Koran */

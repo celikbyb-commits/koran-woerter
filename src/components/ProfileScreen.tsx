@@ -12,10 +12,12 @@ import {
   type State,
 } from "@/lib/progress";
 import { IconBook, IconCheck, IconFlame, IconGem, ProgressBar } from "./ui";
-
-const WEEKDAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+import { useI18n } from "@/lib/i18n";
+import OfflineCard from "./OfflineCard";
 
 export default function ProfileScreen({ progress }: { progress: State }) {
+  const { t } = useI18n();
+  const WEEKDAYS = t("weekdays").split("|");
   const learned = WORDS.filter((w) => (progress.words[w.id]?.box ?? 0) >= LEARNED_BOX).length;
   const lessonsDone = ALL_LESSONS.filter((l) => progress.lessons[l.id]).length;
 
@@ -28,21 +30,21 @@ export default function ProfileScreen({ progress }: { progress: State }) {
 
   return (
     <div className="flex flex-col gap-6 pb-10">
-      <h1 className="text-2xl font-extrabold text-slate-800">Statistik</h1>
+      <h1 className="text-2xl font-extrabold text-slate-800">{t("statsTitle")}</h1>
 
       <div className="grid grid-cols-2 gap-3">
-        <Tile icon={<IconFlame className="h-7 w-7 text-orange-500" />} value={currentStreak(progress)} label="Tage in Folge" />
-        <Tile icon={<IconGem className="h-7 w-7 text-sky-400" />} value={progress.xp} label="XP gesamt" />
-        <Tile icon={<IconBook className="h-7 w-7 text-amber-400" />} value={`${learned}/${WORDS.length}`} label="Wörter gelernt" />
-        <Tile icon={<IconCheck className="h-7 w-7 text-emerald-500" />} value={`${lessonsDone}/${ALL_LESSONS.length}`} label="Lektionen" />
+        <Tile icon={<IconFlame className="h-7 w-7 text-orange-500" />} value={currentStreak(progress)} label={t("streak")} />
+        <Tile icon={<IconGem className="h-7 w-7 text-sky-400" />} value={progress.xp} label={t("xpTotal")} />
+        <Tile icon={<IconBook className="h-7 w-7 text-amber-400" />} value={`${learned}/${WORDS.length}`} label={t("wordsLearned")} />
+        <Tile icon={<IconCheck className="h-7 w-7 text-emerald-500" />} value={`${lessonsDone}/${ALL_LESSONS.length}`} label={t("lessons")} />
       </div>
 
       {/* Wochenübersicht */}
       <section className="rounded-2xl border-2 border-slate-200 p-4">
         <div className="mb-4 flex items-baseline justify-between">
-          <h2 className="font-extrabold text-slate-800">Diese Woche</h2>
+          <h2 className="font-extrabold text-slate-800">{t("thisWeek")}</h2>
           <span className="text-sm font-bold text-slate-400">
-            Heute {todayXp(progress)}/{DAILY_GOAL} XP
+            {t("todayXp", { n: todayXp(progress), goal: DAILY_GOAL })}
           </span>
         </div>
         <div className="flex h-36 items-end justify-between gap-2">
@@ -65,13 +67,13 @@ export default function ProfileScreen({ progress }: { progress: State }) {
 
       {/* Fortschritt pro Einheit */}
       <section className="flex flex-col gap-4 rounded-2xl border-2 border-slate-200 p-4">
-        <h2 className="font-extrabold text-slate-800">Fortschritt pro Einheit</h2>
+        <h2 className="font-extrabold text-slate-800">{t("perUnit")}</h2>
         {UNITS.map((u) => {
           const n = u.words.filter((w) => (progress.words[w.id]?.box ?? 0) >= LEARNED_BOX).length;
           return (
             <div key={u.id} className="flex flex-col gap-1.5">
               <div className="flex justify-between text-sm font-bold">
-                <span className="text-slate-700">{u.title}</span>
+                <span className="text-slate-700">{t("unitN", { n: u.number })} · {t("unitTitle", { from: u.from, to: u.to })}</span>
                 <span className="text-slate-400">
                   {n}/{u.words.length}
                 </span>
@@ -82,19 +84,18 @@ export default function ProfileScreen({ progress }: { progress: State }) {
         })}
       </section>
 
-      <p className="px-1 text-sm font-semibold text-slate-400">
-        Ein Wort gilt als gelernt, wenn du es {LEARNED_BOX}× hintereinander richtig hattest. Dein
-        Fortschritt wird nur auf diesem Gerät gespeichert.
-      </p>
+      <OfflineCard />
+
+      <p className="px-1 text-sm font-semibold text-slate-400">{t("learnedNote", { n: LEARNED_BOX })}</p>
 
       <button
         type="button"
         onClick={() => {
-          if (window.confirm("Gesamten Lernfortschritt wirklich löschen?")) resetProgress();
+          if (window.confirm(t("resetConfirm"))) resetProgress();
         }}
         className="self-center rounded-xl px-4 py-2 text-sm font-extrabold tracking-wide text-rose-500 uppercase hover:bg-rose-50"
       >
-        Fortschritt zurücksetzen
+        {t("reset")}
       </button>
     </div>
   );

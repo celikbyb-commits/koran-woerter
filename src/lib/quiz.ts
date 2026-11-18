@@ -17,8 +17,11 @@ export function shuffle<T>(items: T[]): T[] {
 }
 
 function overlaps(a: Word, b: Word): boolean {
-  const keys = new Set(meaningKeys(a.de));
-  return a.ar === b.ar || meaningKeys(b.de).some((k) => keys.has(k));
+  if (a.ar === b.ar) return true;
+  // In keiner der beiden Sprachen dürfen zwei Antworten dieselbe Bedeutung haben
+  const de = new Set(meaningKeys(a.de));
+  const tr = new Set(meaningKeys(a.tr));
+  return meaningKeys(b.de).some((k) => de.has(k)) || meaningKeys(b.tr).some((k) => tr.has(k));
 }
 
 /** Falsche Antworten, bevorzugt aus derselben Kategorie (macht es anspruchsvoller). */

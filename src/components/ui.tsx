@@ -2,6 +2,7 @@
 
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { audioSlug, type Word } from "@/lib/words";
+import { useI18n } from "@/lib/i18n";
 
 /* ------------------------------------------------------------------ */
 /* Knöpfe im "Tasten"-Stil mit Kante unten                            */
@@ -100,6 +101,7 @@ export function SpeakButton({
   size?: "sm" | "md" | "lg";
 }) {
   const dims = { sm: "h-9 w-9", md: "h-11 w-11", lg: "h-14 w-14" }[size];
+  const { t } = useI18n();
   return (
     <button
       type="button"
@@ -107,7 +109,7 @@ export function SpeakButton({
         e.stopPropagation();
         playWord(word);
       }}
-      aria-label="Aussprache anhören"
+      aria-label={t("listen")}
       className={`${dims} inline-flex shrink-0 items-center justify-center rounded-2xl border-b-4 border-sky-700 bg-sky-500 text-white transition-all hover:bg-sky-400 active:translate-y-[2px] active:border-b-2`}
     >
       <IconSpeaker className="h-1/2 w-1/2" />

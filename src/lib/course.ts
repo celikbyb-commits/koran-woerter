@@ -38,6 +38,9 @@ export type Unit = {
   title: string;
   /** Anteil des Korantextes, der nach dieser Einheit abgedeckt ist (in %) */
   coverage: number;
+  /** Position des ersten/letzten Wortes in der Häufigkeitsliste */
+  from: number;
+  to: number;
   theme: Theme;
   words: Word[];
   lessons: Lesson[];
@@ -64,6 +67,8 @@ export const UNITS: Unit[] = UNIT_INFO.map((info, i) => {
     number: info.number,
     title: `Wörter ${info.from}–${info.to}`,
     coverage: info.coverage,
+    from: info.from,
+    to: info.to,
     theme: THEMES[i % THEMES.length],
     words,
     lessons: chunk(words).map((ws, j) => ({

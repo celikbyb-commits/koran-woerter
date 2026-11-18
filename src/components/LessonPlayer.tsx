@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Word } from "@/lib/words";
 import { recordAnswer, setSound, useProgress } from "@/lib/progress";
 import { retryOf, type Step } from "@/lib/quiz";
+import { useI18n } from "@/lib/i18n";
+import VerseExample from "./VerseExample";
 import {
   Arabic,
   Button,
@@ -27,8 +29,6 @@ export type LessonResult = {
   durationMs: number;
   mistakes: Word[];
 };
-
-const PRAISE = ["Richtig!", "Super!", "Sehr gut!", "Klasse!", "Ausgezeichnet!", "Mā shāʾ Allāh!"];
 
 export default function LessonPlayer({
   title,
@@ -65,6 +65,7 @@ export default function LessonPlayer({
   );
   const step = queue[pos];
   const { sound } = useProgress();
+  const { t } = useI18n();
 
   // Arabisches Wort automatisch vorlesen, sobald es als Frage/neues Wort erscheint
   useEffect(() => {
@@ -107,7 +108,8 @@ export default function LessonPlayer({
       setSolved((n) => n + 1);
       if (!step.retry) setFirstTry((n) => n + 1);
       setCombo((c) => c + 1);
-      setChecked({ correct, praise: PRAISE[Math.floor(Math.random() * PRAISE.length)] });
+      const praise = t("praise").split("|");
+      setChecked({ correct, praise: praise[Math.floor(Math.random() * praise.length)] });
     } else {
       setCombo(0);
       setMissed((m) => [...m, step.word]);
@@ -153,9 +155,9 @@ export default function LessonPlayer({
         <button
           type="button"
           onClick={() => {
-            if (pos === 0 || window.confirm("Lektion wirklich beenden? Dein Fortschritt in dieser Lektion geht verloren.")) onExit();
+            if (pos === 0 || window.confirm(t("exitLessonConfirm"))) onExit();
           }}
-          aria-label="Lektion beenden"
+          aria-label={t("exitLesson")}
           className="rounded-xl p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
         >
           <IconX className="h-7 w-7" />
@@ -164,15 +166,15 @@ export default function LessonPlayer({
         <button
           type="button"
           onClick={() => setSound(!sound)}
-          aria-label={sound ? "Ton aus" : "Ton an"}
-          title={sound ? "Automatisches Vorlesen aus" : "Automatisches Vorlesen an"}
+          aria-label={sound ? t("soundOff") : t("soundOn")}
+          title={sound ? t("soundOff") : t("soundOn")}
           className="rounded-xl p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
         >
           {sound ? <IconSpeaker className="h-7 w-7" /> : <IconSpeakerOff className="h-7 w-7" />}
         </button>
         {combo >= 3 && (
           <span className="animate-pop text-sm font-extrabold whitespace-nowrap text-orange-500">
-            {combo}× in Folge
+            {t("inARow", { n: combo })}
           </span>
         )}
       </div>
@@ -214,14 +216,15 @@ function missedUnique(words: Word[]): Word[] {
 /* ------------------------------------------------------------------ */
 
 function IntroCard({ word }: { word: Word }) {
+  const { t, m, num } = useI18n();
   return (
     <div className="animate-slide-in flex flex-col gap-6">
       <div className="flex items-center gap-2">
         <span className="rounded-lg bg-violet-100 px-2.5 py-1 text-xs font-extrabold tracking-wide text-violet-600 uppercase">
-          Neues Wort
+          {t("newWord")}
         </span>
       </div>
-      <h2 className="text-2xl font-extrabold text-slate-800">Merke dir dieses Wort</h2>
+      <h2 className="text-2xl font-extrabold text-slate-800">{t("rememberWord")}</h2>
       <div className="flex flex-col items-center gap-4 rounded-3xl border-2 border-b-4 border-slate-200 px-6 py-10">
         <Arabic className="text-7xl leading-snug text-slate-900">{word.ar}</Arabic>
         <div className="flex items-center gap-3">
@@ -229,23 +232,19 @@ function IntroCard({ word }: { word: Word }) {
           <span className="text-lg font-semibold text-slate-400 italic">{word.translit}</span>
         </div>
         <div className="mt-2 h-px w-16 bg-slate-200" />
-        <p className="text-center text-2xl font-extrabold text-slate-800">{word.de}</p>
+        <p className="text-center text-2xl font-extrabold text-slate-800">{m(word)}</p>
       </div>
       <div className="flex flex-wrap justify-center gap-2 text-sm font-bold">
         <span className="rounded-xl bg-amber-50 px-3 py-1.5 text-amber-600">
-          {word.count.toLocaleString("de-DE")}× im Koran
+          {t("inQuranN", { n: num(word.count) })}
         </span>
         {word.root && (
           <span className="rounded-xl bg-slate-100 px-3 py-1.5 text-slate-500">
-            Wurzel <Arabic className="text-base">{word.root}</Arabic>
-          </span>
-        )}
-        {word.quran && (
-          <span className="rounded-xl bg-slate-100 px-3 py-1.5 text-slate-500">
-            im Koran z. B. <Arabic className="text-lg">{word.quran}</Arabic>
+            {t("root")} <Arabic className="text-base">{word.root}</Arabic>
           </span>
         )}
       </div>
+      <VerseExample word={word} />
     </div>
   );
 }
@@ -262,10 +261,11 @@ function ChoiceCard({
   onSelect: (id: string) => void;
 }) {
   const arToDe = step.direction === "ar-de";
+  const { t, m } = useI18n();
   return (
     <div className="animate-slide-in flex flex-col gap-6">
       <h2 className="text-2xl font-extrabold text-slate-800">
-        {arToDe ? "Was bedeutet dieses Wort?" : "Wähle das richtige arabische Wort"}
+        {arToDe ? t("whatMeans") : t("chooseArabic")}
       </h2>
 
       <div className="flex items-center justify-center gap-4 rounded-3xl bg-slate-50 px-4 py-6">
@@ -275,7 +275,7 @@ function ChoiceCard({
             <Arabic className="text-6xl leading-snug text-slate-900">{step.word.ar}</Arabic>
           </>
         ) : (
-          <p className="text-center text-3xl font-extrabold text-slate-800">{step.word.de}</p>
+          <p className="text-center text-3xl font-extrabold text-slate-800">{m(step.word)}</p>
         )}
       </div>
 
@@ -304,7 +304,7 @@ function ChoiceCard({
                 {i + 1}
               </span>
               {arToDe ? (
-                <span className="flex-1 text-lg font-bold">{o.de}</span>
+                <span className="flex-1 text-lg font-bold">{m(o)}</span>
               ) : (
                 <Arabic className="flex-1 text-right text-4xl leading-relaxed">{o.ar}</Arabic>
               )}
@@ -333,6 +333,7 @@ function BottomBar({
   onCheck: () => void;
   onContinue: () => void;
 }) {
+  const { t, m } = useI18n();
   const bg =
     state === "correct" ? "bg-emerald-100" : state === "wrong" ? "bg-rose-100" : "bg-white border-t-2 border-slate-100";
   return (
@@ -348,19 +349,19 @@ function BottomBar({
               {state === "correct" ? <IconCheck className="h-9 w-9" /> : <IconX className="h-9 w-9" />}
             </span>
             <div className={state === "correct" ? "text-emerald-700" : "text-rose-700"}>
-              <p className="text-2xl font-extrabold">{state === "correct" ? praise : "Leider falsch"}</p>
+              <p className="text-2xl font-extrabold">{state === "correct" ? praise : t("wrong")}</p>
               {state === "wrong" ? (
                 <p className="mt-1 font-semibold">
-                  Richtig ist:{" "}
+                  {t("correctIs")}{" "}
                   {direction === "ar-de" ? (
-                    <strong>{solution.de}</strong>
+                    <strong>{m(solution)}</strong>
                   ) : (
                     <Arabic className="text-2xl font-bold">{solution.ar}</Arabic>
                   )}
                 </p>
               ) : null}
               <p className="mt-0.5 text-sm font-semibold opacity-80">
-                <Arabic className="text-lg">{solution.ar}</Arabic> · {solution.translit} · {solution.de}
+                <Arabic className="text-lg">{solution.ar}</Arabic> · {solution.translit} · {m(solution)}
               </p>
             </div>
           </div>
@@ -371,7 +372,7 @@ function BottomBar({
 
         {state === "idle" ? (
           <Button onClick={onCheck} disabled={!canCheck} className="w-full sm:w-44">
-            Prüfen
+            {t("check")}
           </Button>
         ) : (
           <Button
@@ -380,7 +381,7 @@ function BottomBar({
             className="w-full sm:w-44"
             ref={(el) => el?.focus({ preventScroll: true })}
           >
-            Weiter
+            {t("continue")}
           </Button>
         )}
       </div>
@@ -406,6 +407,7 @@ export function FinishScreen({
   const mins = Math.floor(elapsed / 60000);
   const secs = Math.floor((elapsed % 60000) / 1000);
   const perfect = result.accuracy === 100;
+  const { t, m } = useI18n();
   return (
     <div className="flex min-h-dvh flex-col bg-white">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-8 px-4 pt-10 pb-36 text-center">
@@ -418,7 +420,7 @@ export function FinishScreen({
         </div>
         <div>
           <h1 className="text-3xl font-extrabold text-amber-500">
-            {perfect ? "Perfekt!" : "Lektion geschafft!"}
+            {perfect ? t("perfect") : t("lessonDone")}
           </h1>
           <p className="mt-2 font-semibold text-slate-500">{title}</p>
         </div>
@@ -427,10 +429,10 @@ export function FinishScreen({
           <StatTile label="XP" color="border-amber-400 bg-amber-400" textColor="text-amber-500">
             <IconGem className="h-5 w-5" /> {xp}
           </StatTile>
-          <StatTile label="Genauigkeit" color="border-emerald-500 bg-emerald-500" textColor="text-emerald-500">
+          <StatTile label={t("accuracy")} color="border-emerald-500 bg-emerald-500" textColor="text-emerald-500">
             <IconTarget className="h-5 w-5" /> {result.accuracy}%
           </StatTile>
-          <StatTile label="Zeit" color="border-sky-500 bg-sky-500" textColor="text-sky-500">
+          <StatTile label={t("time")} color="border-sky-500 bg-sky-500" textColor="text-sky-500">
             <IconClock className="h-5 w-5" /> {mins}:{String(secs).padStart(2, "0")}
           </StatTile>
         </div>
@@ -438,12 +440,12 @@ export function FinishScreen({
         {result.mistakes.length > 0 && (
           <div className="w-full rounded-2xl border-2 border-slate-200 p-4 text-left">
             <p className="mb-2 text-sm font-extrabold tracking-wide text-slate-400 uppercase">
-              Noch üben
+              {t("practiceMore")}
             </p>
             <ul className="flex flex-col gap-2">
               {result.mistakes.map((w) => (
                 <li key={w.id} className="flex items-center justify-between gap-3">
-                  <span className="font-bold text-slate-700">{w.de}</span>
+                  <span className="font-bold text-slate-700">{m(w)}</span>
                   <Arabic className="text-2xl text-slate-800">{w.ar}</Arabic>
                 </li>
               ))}
@@ -454,7 +456,7 @@ export function FinishScreen({
       <div className="fixed inset-x-0 bottom-0 border-t-2 border-slate-100 bg-white pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto flex max-w-3xl justify-end px-4 py-5 sm:py-7">
           <Button onClick={onContinue} className="w-full sm:w-44" ref={(el) => el?.focus({ preventScroll: true })}>
-            Weiter
+            {t("continue")}
           </Button>
         </div>
       </div>
