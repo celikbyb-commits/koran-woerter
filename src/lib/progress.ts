@@ -196,3 +196,77 @@ export function weightFor(stat: WordStat | undefined): number {
   if (!stat) return 5;
   return [8, 6, 4, 3, 2, 1][stat.box] ?? 1;
 }
+
+/* ------------------------------------------------------------------ */
+/* Sicherung: Fortschritt exportieren / auf anderem Gerät einlesen     */
+/* ------------------------------------------------------------------ */
+
+const BACKUP_TAG = "koran-woerter-sicherung";
+
+/** Fortschritt als JSON-Text (für Datei oder Code). */
+export function exportBackup(): string {
+  return JSON.stringify({ app: BACKUP_TAG, version: 1, created: new Date().toISOString(), state: read() });
+}
+
+function isState(x: unknown): x is State {
+  const s = x as State;
+  return !!s && typeof s === "object" && typeof s.words === "object" && typeof s.xp === "number";
+}
+
+/** Zwei Stände zusammenführen: pro Eintrag gewinnt der weiter fortgeschrittene. */
+function merge(a: State, b: State): State {
+  const words: Record<string, WordStat> = { ...a.words };
+  for (const [id, w] of Object.entries(b.words ?? {})) {
+    const cur = words[id];
+    if (!cur || w.right + w.wrong > cur.right + cur.wrong) words[id] = w;
+  }
+  const lessons: Record<string, LessonStat> = { ...a.lessons };
+  for (const [id, l] of Object.entries(b.lessons ?? {})) {
+    const cur = lessons[id];
+    lessons[id] = cur ? { best: Math.max(cur.best, l.best), times: Math.max(cur.times, l.times) } : l;
+  }
+  const daily: Record<string, number> = { ...a.daily };
+  for (const [d, n] of Object.entries(b.daily ?? {})) daily[d] = Math.max(daily[d] ?? 0, n);
+  const streak = (b.streak?.last ?? "") > (a.streak?.last ?? "") ? b.streak : a.streak;
+  return { ...a, words, lessons, daily, streak, xp: Math.max(a.xp, b.xp ?? 0) };
+}
+
+/** Sicherung einlesen und mit dem aktuellen Stand zusammenführen. Gibt false bei ungültigen Daten zurück. */
+export function importBackup(text: string): boolean {
+  try {
+    const data = JSON.parse(text.trim());
+    const state = data?.app === BACKUP_TAG ? data.state : data;
+    if (!isState(state)) return false;
+    write(merge(read(), { ...EMPTY, ...state }));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Kompakter Code (gzip + Base64), z.B. zum Kopieren per Nachricht. */
+export async function exportCode(): Promise<string> {
+  const json = exportBackup();
+  if (typeof CompressionStream === "undefined") return btoa(unescape(encodeURIComponent(json)));
+  const stream = new Blob([json]).stream().pipeThrough(new CompressionStream("gzip"));
+  const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return "KW1:" + btoa(bin);
+}
+
+export async function importCode(code: string): Promise<boolean> {
+  const c = code.trim().replace(/\s+/g, "");
+  try {
+    if (c.startsWith("KW1:")) {
+      const bin = atob(c.slice(4));
+      const bytes = Uint8Array.from(bin, (ch) => ch.charCodeAt(0));
+      const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+      return importBackup(await new Response(stream).text());
+    }
+    if (c.startsWith("{")) return importBackup(c);
+    return importBackup(decodeURIComponent(escape(atob(c))));
+  } catch {
+    return false;
+  }
+}

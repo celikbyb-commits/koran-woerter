@@ -139,6 +139,17 @@ const de = {
   offlineAudio: "Alle Töne für offline laden",
   offlineAudioDone: "Alle Töne sind offline verfügbar ✓",
   offlineAudioLoading: "Lade Töne … {n}%",
+  backupTitle: "Fortschritt sichern",
+  backupHint:
+    "Ohne Konto: Sichere deinen Fortschritt als Datei oder Code und lies ihn auf einem anderen Gerät wieder ein. Beim Einlesen wird zusammengeführt – es geht nichts verloren.",
+  backupDownload: "Sicherung herunterladen",
+  backupUpload: "Sicherung laden",
+  backupCopy: "Code kopieren",
+  backupCopied: "Code kopiert ✓ – jetzt z. B. per Nachricht an dich selbst schicken.",
+  backupPaste: "Code einfügen",
+  backupPastePrompt: "Code hier einfügen:",
+  backupOk: "Fortschritt eingelesen ✓",
+  backupFail: "Das hat nicht geklappt – Datei oder Code ist ungültig.",
 } as const;
 
 type Key = keyof typeof de;
@@ -269,6 +280,17 @@ const tr: Record<Key, string> = {
   offlineAudio: "Tüm sesleri çevrimdışı için indir",
   offlineAudioDone: "Tüm sesler çevrimdışı kullanılabilir ✓",
   offlineAudioLoading: "Sesler indiriliyor … %{n}",
+  backupTitle: "İlerlemeyi yedekle",
+  backupHint:
+    "Hesap gerekmez: İlerlemeni dosya veya kod olarak yedekle ve başka bir cihazda geri yükle. Yükleme sırasında birleştirilir – hiçbir şey kaybolmaz.",
+  backupDownload: "Yedeği indir",
+  backupUpload: "Yedeği yükle",
+  backupCopy: "Kodu kopyala",
+  backupCopied: "Kod kopyalandı ✓ – şimdi örn. kendine mesajla gönder.",
+  backupPaste: "Kodu yapıştır",
+  backupPastePrompt: "Kodu buraya yapıştır:",
+  backupOk: "İlerleme yüklendi ✓",
+  backupFail: "Olmadı – dosya veya kod geçersiz.",
 };
 
 const DICT: Record<Lang, Record<Key, string>> = { de, tr };

@@ -14,6 +14,7 @@ import {
 import { IconBook, IconCheck, IconFlame, IconGem, ProgressBar } from "./ui";
 import { useI18n } from "@/lib/i18n";
 import OfflineCard from "./OfflineCard";
+import BackupCard from "./BackupCard";
 
 export default function ProfileScreen({ progress }: { progress: State }) {
   const { t } = useI18n();
@@ -83,6 +84,8 @@ export default function ProfileScreen({ progress }: { progress: State }) {
           );
         })}
       </section>
+
+      <BackupCard />
 
       <OfflineCard />
 

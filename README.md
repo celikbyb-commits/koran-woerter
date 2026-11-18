@@ -19,6 +19,8 @@ Web-App zum Lernen der Wörter des Korans – auf **Deutsch und Türkisch** (ums
   markiert ist, mit Link zur Übersetzung auf quran.com.
 - **Installierbar & offline:** Web-App-Manifest und Service Worker; in der
   Statistik lassen sich alle Tondateien für die Offline-Nutzung laden.
+- **Sicherung ohne Konto:** Fortschritt als Datei oder kurzen Code exportieren
+  und auf einem anderen Gerät einlesen (wird zusammengeführt, nichts geht verloren).
 - Lernfortschritt wird nur lokal im Browser gespeichert – kein Login, keine
   Datenbank.
 
