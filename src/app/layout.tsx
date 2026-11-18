@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Amiri, Nunito } from "next/font/google";
+import ServiceWorker from "@/components/ServiceWorker";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -15,8 +16,9 @@ const amiri = Amiri({
 
 export const metadata: Metadata = {
   title: "Koran-Wörter",
-  description:
-    "Die wichtigsten Wörter des Korans auf Deutsch lernen und im Quiz trainieren",
+  description: "Die Wörter des Korans lernen – Deutsch und Türkisch",
+  appleWebApp: { capable: true, title: "Koran-Wörter", statusBarStyle: "default" },
+  icons: { apple: "/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {
@@ -29,7 +31,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="de"
       className={`${nunito.variable} ${amiri.variable} antialiased`}
     >
-      <body className="min-h-dvh">{children}</body>
+      <body className="min-h-dvh">
+        {children}
+        <ServiceWorker />
+      </body>
     </html>
   );
 }

@@ -11,7 +11,18 @@ export const MAX_BOX = 5;
 export const LEARNED_BOX = 3;
 export const DAILY_GOAL = 20;
 
-export type WordStat = { box: number; right: number; wrong: number };
+export type WordStat = {
+  box: number;
+  right: number;
+  wrong: number;
+  /** Tag, an dem das Wort wieder abgefragt werden sollte (JJJJ-MM-TT) */
+  due?: string;
+};
+
+export type Lang = "de" | "tr";
+
+/** Abstand bis zur nächsten Wiederholung (in Tagen) je Karteikasten-Fach. */
+const INTERVALS = [0, 1, 3, 7, 14, 30];
 export type LessonStat = { best: number; times: number };
 
 export type State = {
@@ -22,6 +33,8 @@ export type State = {
   streak: { count: number; last: string | null };
   /** Wörter in Lektionen automatisch vorlesen */
   sound: boolean;
+  /** Sprache der Bedeutungen und der Oberfläche */
+  lang: Lang;
 };
 
 const STORAGE_KEY = "koran-woerter-state-v2";
@@ -34,6 +47,7 @@ const EMPTY: State = {
   daily: {},
   streak: { count: 0, last: null },
   sound: true,
+  lang: "de",
 };
 
 let cache: State | null = null;
@@ -88,18 +102,39 @@ export function useProgress(): State {
   return useSyncExternalStore(subscribe, read, () => EMPTY);
 }
 
+function addDays(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return dayKey(d);
+}
+
 export function recordAnswer(wordId: string, correct: boolean) {
   const s = read();
   const prev = s.words[wordId] ?? { box: 0, right: 0, wrong: 0 };
-  write({
-    ...s,
-    words: {
-      ...s.words,
-      [wordId]: correct
-        ? { ...prev, box: Math.min(prev.box + 1, MAX_BOX), right: prev.right + 1 }
-        : { ...prev, box: 0, wrong: prev.wrong + 1 },
-    },
-  });
+  let next: WordStat;
+  if (correct) {
+    const box = Math.min(prev.box + 1, MAX_BOX);
+    // Pro Tag nur ein Fach aufsteigen: mehrfach richtig am selben Tag verlängert den Abstand nicht
+    const sameDay = prev.due !== undefined && prev.due > dayKey();
+    next = sameDay
+      ? { ...prev, right: prev.right + 1 }
+      : { ...prev, box, right: prev.right + 1, due: addDays(INTERVALS[box]) };
+  } else {
+    next = { ...prev, box: 0, wrong: prev.wrong + 1, due: dayKey() };
+  }
+  write({ ...s, words: { ...s.words, [wordId]: next } });
+}
+
+/** IDs der Wörter, die heute (oder früher) zur Wiederholung fällig sind. */
+export function dueWordIds(s: State): string[] {
+  const today = dayKey();
+  return Object.entries(s.words)
+    .filter(([, w]) => (w.due ?? today) <= today)
+    .map(([id]) => id);
+}
+
+export function setLang(lang: Lang) {
+  write({ ...read(), lang });
 }
 
 export function addXp(amount: number) {
@@ -137,7 +172,7 @@ export function completeLesson(lessonId: string, accuracy: number) {
 }
 
 export function resetProgress() {
-  write({ ...EMPTY, sound: read().sound });
+  write({ ...EMPTY, sound: read().sound, lang: read().lang });
 }
 
 export function setSound(on: boolean) {

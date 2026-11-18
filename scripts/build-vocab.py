@@ -6,6 +6,7 @@ Eingaben (im Ordner data/):
   korpus-meta.json         – Gesamtzahlen für die Abdeckung
   uebersetzungen.tsv       – Rang <TAB> arabische Anzeigeform (optional) <TAB> Deutsch
                              ("-" als Deutsch = Eintrag weglassen)
+  uebersetzungen_tr.tsv    – Rang <TAB> Türkisch
 
 Aufruf: python3 scripts/build-vocab.py
 """
@@ -147,6 +148,12 @@ def main():
         elif len(parts) == 3:
             de[int(parts[0])] = (parts[1], parts[2])
 
+    tr = {}
+    for line in open(os.path.join(DATA, "uebersetzungen_tr.tsv"), encoding="utf-8"):
+        parts = line.rstrip("\n").split("\t")
+        if len(parts) == 2:
+            tr[int(parts[0])] = parts[1]
+
     words = []
     covered = 0
     for o in src:
@@ -170,6 +177,7 @@ def main():
             "quran": o["word"] if o["word"] and o["word"] != ar else "",
             "translit": "Allāh" if re.sub(r"[\u064B-\u0652]", "", ar) == "الله" else translit(ar),
             "de": meaning,
+            "tr": tr.get(o["rank"], ""),
             "root": " ".join(o["root"]) if o["root"] else "",
             "count": o["count"],
             "category": cat,
