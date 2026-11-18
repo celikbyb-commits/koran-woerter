@@ -77,12 +77,24 @@ export default function MatchGame({
     onFinish(r);
   }
 
+  // Kurzes Aufleuchten (grün/rot); ein neueres Aufleuchten ersetzt ein älteres.
+  const flashSeq = useRef(0);
+  function showFlash(ids: string[], ok: boolean, ms: number) {
+    const id = ++flashSeq.current;
+    setFlash({ ids, ok });
+    setTimeout(() => {
+      if (flashSeq.current === id) setFlash(null);
+    }, ms);
+  }
+
   function tap(side: Side, word: Word) {
+    // Gesperrt nur kurz beim Wechsel zur nächsten Runde – sonst kann man ohne Pause weitertippen.
     if (locked.current || matched.has(word.id)) return;
     if (side === "ar" && sound) playWord(word);
 
     if (!picked || picked.side === side) {
-      setPicked({ side, id: word.id });
+      // Erneutes Antippen derselben Karte hebt die Auswahl auf
+      setPicked(picked?.side === side && picked.id === word.id ? null : { side, id: word.id });
       return;
     }
 
@@ -97,30 +109,24 @@ export default function MatchGame({
       const nextMatched = new Set(matched).add(w.id);
       setMatched(nextMatched);
       setFound((n) => n + 1);
-      setFlash({ ids: [w.id], ok: true });
-      locked.current = true;
-      setTimeout(() => {
-        setFlash(null);
-        locked.current = false;
-        if (nextMatched.size === round.length) {
+      showFlash([w.id], true, 400);
+      if (nextMatched.size === round.length) {
+        locked.current = true;
+        setTimeout(() => {
+          locked.current = false;
           if (roundIdx + 1 >= rounds.length) finish(missed);
           else {
             setRoundIdx(roundIdx + 1);
             setOrder(shuffleRound(rounds[roundIdx + 1]));
             setMatched(new Set());
           }
-        }
-      }, 350);
+        }, 450);
+      }
     } else {
       // Falsches Paar – das arabische Wort zählt als Fehler
       const w = round.find((x) => x.id === arId)!;
       if (!missed.has(w.id)) setMissed(new Map(missed).set(w.id, w));
-      setFlash({ ids: [arId, deId], ok: false });
-      locked.current = true;
-      setTimeout(() => {
-        setFlash(null);
-        locked.current = false;
-      }, 600);
+      showFlash([arId, deId], false, 600);
     }
   }
 
@@ -201,7 +207,7 @@ export default function MatchGame({
                   <button
                     key={w.id}
                     type="button"
-                    disabled={isMatched && !isFlash}
+                    disabled={isMatched}
                     onClick={() => tap(side, w)}
                     className={`flex min-h-[68px] items-center justify-center rounded-2xl border-2 border-b-4 px-2 py-2 text-center transition-all active:translate-y-[2px] active:border-b-2 disabled:cursor-default disabled:active:translate-y-0 disabled:active:border-b-4 ${look}`}
                   >

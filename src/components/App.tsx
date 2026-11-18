@@ -165,8 +165,15 @@ export default function App() {
                 onStartLesson={startLesson}
                 onReview={startReview}
                 onAdvanced={() => {
-                  setTab("ueben");
-                  setTimeout(() => document.getElementById("profi")?.scrollIntoView({ behavior: "smooth" }), 50);
+                  // Direkt loslegen: schon gelernte Wörter, sonst die 100 häufigsten
+                  const seen = WORDS.filter((w) => progress.words[w.id]);
+                  const pool = seen.length >= 10 ? seen : WORDS.slice(0, 100);
+                  setMatch({
+                    title: translate(progress.lang, "proTitle"),
+                    rounds: buildMatchRounds(pool, Math.min(20, pool.length), progress),
+                    key: Date.now(),
+                  });
+                  window.scrollTo(0, 0);
                 }}
                 onShowWords={(u) => {
                   setWordsCategory(u.id as WordFilter);
