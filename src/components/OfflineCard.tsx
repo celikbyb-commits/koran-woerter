@@ -15,7 +15,7 @@ export default function OfflineCard() {
     setState("loading");
     const urls = WORDS.map((w) => `/audio/${audioSlug(w)}.mp3`).concat("/data/beispielverse.json");
     // Direkt im Speicher ablegen, den auch der Service Worker benutzt (siehe public/sw.js)
-    const cache = "caches" in window ? await caches.open("assets-v1") : null;
+    const cache = "caches" in window ? await caches.open("assets-v2") : null;
     let failed = 0;
     for (let i = 0; i < urls.length; i += 12) {
       await Promise.all(

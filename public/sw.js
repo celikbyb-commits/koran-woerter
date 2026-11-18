@@ -1,7 +1,7 @@
 // Service Worker: macht die App offline nutzbar.
 // - Seiten: zuerst Netz, bei fehlender Verbindung aus dem Speicher
 // - Programmdateien, Tondateien, Daten, Symbole: aus dem Speicher (einmal geladen = offline verfügbar)
-const VERSION = "v1";
+const VERSION = "v2";
 const PAGES = `pages-${VERSION}`;
 const ASSETS = `assets-${VERSION}`;
 
